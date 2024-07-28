@@ -160,7 +160,7 @@ const Table = ({ data, columns, onUpdate, onDelete, onToggleComplete }) => {
       setContextMenu({ ...contextMenu, visible: false });
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
+  }, [contextMenu]);
 
   const getRowClass = (dueDate) => {
     const today = new Date();

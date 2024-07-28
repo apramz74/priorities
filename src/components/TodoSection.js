@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   addTodo,
   updateTodo,
@@ -15,14 +15,14 @@ const TodoSection = ({ priorityId }) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
 
-  useEffect(() => {
-    loadTodos();
-  }, [priorityId, showCompleted]);
-
-  const loadTodos = async () => {
+  const loadTodos = useCallback(async () => {
     const fetchedTodos = await fetchTodos(priorityId, showCompleted);
     setTodos(fetchedTodos);
-  };
+  }, [priorityId, showCompleted]);
+
+  useEffect(() => {
+    loadTodos();
+  }, [loadTodos]);
 
   const handleAddTodo = async () => {
     if (newTodo.name.trim() && newTodo.due_date) {

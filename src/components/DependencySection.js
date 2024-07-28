@@ -19,17 +19,17 @@ const DependencySection = ({ priorityId }) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
 
-  useEffect(() => {
-    loadDependencies();
-  }, [priorityId, showCompleted]);
-
-  const loadDependencies = async () => {
+  const loadDependencies = React.useCallback(async () => {
     const fetchedDependencies = await fetchDependencies(
       priorityId,
       showCompleted
     );
     setDependencies(fetchedDependencies);
-  };
+  }, [priorityId, showCompleted]);
+
+  useEffect(() => {
+    loadDependencies();
+  }, [loadDependencies]);
 
   const handleAddDependency = async () => {
     if (newDependency.title && newDependency.person && newDependency.due_date) {
