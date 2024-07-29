@@ -179,10 +179,12 @@ const MilestoneSection = ({ milestones, setMilestones, priorityId }) => {
       >
         <div
           className={`absolute left-0 top-5 -ml-3 ${
-            index === 0 ? "bg-white" : ""
+            index === 0 ? "bg-white before:hidden" : ""
           }`}
         >
-          <div className={`rounded-full p-1 ${colorClass}`}>{icon}</div>
+          <div className={`rounded-full p-1 ${colorClass} relative z-10`}>
+            {icon}
+          </div>
         </div>
         <div className="flex flex-col">
           <div className="flex items-center justify-between">

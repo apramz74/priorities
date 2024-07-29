@@ -62,15 +62,9 @@ const TodoSection = ({ priorityId }) => {
   };
 
   const columns = [
-    { field: "name", header: "Task", sortable: true, editable: true },
-    {
-      field: "due_date",
-      header: "Due date",
-      sortable: true,
-      editable: true,
-      type: "date",
-    },
-    { field: "notes", header: "Note", sortable: true, editable: true },
+    { field: "name", header: "Task" },
+    { field: "due_date", header: "Due Date" },
+    { field: "notes", header: "Notes" },
   ];
 
   return (

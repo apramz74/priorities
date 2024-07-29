@@ -43,3 +43,7 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+.before\:hidden::before {
+  display: none !important;
+}
