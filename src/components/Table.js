@@ -1,10 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
+import { FaExclamationTriangle, FaHourglass, FaTrash } from "react-icons/fa";
 
-const TruncatedCell = ({ content, maxLength = 20 }) => {
+const TruncatedCell = ({
+  content,
+  maxLength = 50,
+  className = "",
+  style = {},
+  editable = false,
+  onUpdate,
+}) => {
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const [tooltipStyle, setTooltipStyle] = useState({});
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(content);
   const cellRef = useRef(null);
   const tooltipRef = useRef(null);
+  const inputRef = useRef(null);
 
   const truncatedContent =
     content.length > maxLength ? content.slice(0, maxLength) + "..." : content;
@@ -59,12 +70,48 @@ const TruncatedCell = ({ content, maxLength = 20 }) => {
     };
   }, [isTooltipVisible]);
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      setIsEditing(false);
+      onUpdate(editValue);
+    } else if (e.key === "Escape") {
+      setIsEditing(false);
+      setEditValue(content);
+    }
+  };
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isEditing]);
+
+  if (isEditing && editable) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        value={editValue}
+        onChange={(e) => setEditValue(e.target.value)}
+        onBlur={() => {
+          setIsEditing(false);
+          onUpdate(editValue);
+        }}
+        onKeyDown={handleKeyDown}
+        className={`w-full border rounded px-2 py-1 ${className}`}
+        style={style}
+      />
+    );
+  }
+
   return (
     <div
       ref={cellRef}
-      className="relative"
+      className={`relative ${className}`}
+      style={style}
       onMouseEnter={() => setIsTooltipVisible(true)}
       onMouseLeave={() => setIsTooltipVisible(false)}
+      onClick={() => editable && setIsEditing(true)}
     >
       <span className="whitespace-nowrap overflow-hidden text-ellipsis block">
         {truncatedContent}
@@ -82,7 +129,13 @@ const TruncatedCell = ({ content, maxLength = 20 }) => {
   );
 };
 
-const EditableCell = ({ value, onUpdate, type = "text" }) => {
+const EditableCell = ({
+  value,
+  onUpdate,
+  type = "text",
+  className = "",
+  style = {},
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const inputRef = useRef(null);
@@ -115,14 +168,19 @@ const EditableCell = ({ value, onUpdate, type = "text" }) => {
           onUpdate(editValue);
         }}
         onKeyDown={handleKeyDown}
-        className="w-full border rounded px-2 py-1"
+        className={`w-full border rounded px-2 py-1 ${className}`}
+        style={style}
       />
     );
   }
 
   return (
-    <div onClick={() => setIsEditing(true)} className="cursor-pointer">
-      <TruncatedCell content={value} />
+    <div
+      onClick={() => setIsEditing(true)}
+      className={`cursor-pointer ${className}`}
+      style={style}
+    >
+      {value}
     </div>
   );
 };
@@ -162,88 +220,106 @@ const Table = ({ data, columns, onUpdate, onDelete, onToggleComplete }) => {
     return () => document.removeEventListener("click", handleClickOutside);
   }, [contextMenu]);
 
-  const getRowClass = (dueDate) => {
+  const getDateStatus = (dueDate) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    // Parse the due date, assuming it's in 'YYYY-MM-DD' format
     const [year, month, day] = dueDate.split("-").map(Number);
-    const itemDate = new Date(year, month - 1, day); // month is 0-indexed in JavaScript Date
+    const itemDate = new Date(year, month - 1, day);
 
-    const isToday = itemDate.getTime() === today.getTime();
-    const isPast = itemDate < today;
+    if (itemDate < today) {
+      return "overdue";
+    } else if (itemDate.getTime() === today.getTime()) {
+      return "sameDay";
+    }
+    return "normal";
+  };
 
-    if (isPast) {
-      return "bg-red-100";
-    } else if (isToday) {
-      return "bg-yellow-100";
-    } else {
-      return itemDate.getTime() % 2 === 0 ? "bg-white" : "bg-gray-50";
+  const getDateStyles = (status) => {
+    switch (status) {
+      case "overdue":
+        return {
+          textColor: "#FF0000",
+          icon: <FaExclamationTriangle className="text-red-500 mr-1" />,
+        };
+      case "sameDay":
+        return {
+          textColor: "#FFA500",
+          icon: <FaHourglass className="text-orange-500 mr-1" />,
+        };
+      default:
+        return {
+          textColor: "inherit",
+          icon: null,
+        };
     }
   };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full table-auto text-sm border-collapse">
-        <thead>
-          <tr className="bg-gray-200 text-left text-gray-600">
-            <th className="px-2 py-2 border border-gray-300">Status</th>
-            {columns.map((column) => (
-              <th
-                key={column.field}
-                className="px-2 py-2 border border-gray-300"
-              >
-                {column.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sortedData.map((item) => (
-            <tr
-              key={item.id}
-              className={getRowClass(item.due_date)}
-              onContextMenu={(e) => handleContextMenu(e, item.id)}
-            >
-              <td className="px-2 py-2 border border-gray-200">
-                <input
-                  type="checkbox"
-                  checked={item.completed}
-                  onChange={() => onToggleComplete(item.id)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+    <div className="space-y-4">
+      {sortedData.map((item) => {
+        const dateStatus = getDateStatus(item[columns[1].field]);
+        const { textColor, icon } = getDateStyles(dateStatus);
+
+        return (
+          <div
+            key={item.id}
+            className="flex items-center justify-between p-4 rounded-lg shadow bg-white"
+            onContextMenu={(e) => handleContextMenu(e, item.id)}
+          >
+            <div className="flex items-center space-x-4 flex-grow">
+              <input
+                type="checkbox"
+                checked={item.completed}
+                onChange={() => onToggleComplete(item.id)}
+                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <div className="flex-grow">
+                <TruncatedCell
+                  content={item[columns[0].field]}
+                  maxLength={50}
+                  className="font-semibold text-base"
+                  style={{ color: textColor }}
+                  editable={true}
+                  onUpdate={(value) =>
+                    onUpdate(item.id, columns[0].field, value)
+                  }
                 />
-              </td>
-              {columns.map((column) => (
-                <td
-                  key={column.field}
-                  className="px-2 py-2 border border-gray-200"
-                >
-                  {column.editable ? (
-                    <EditableCell
-                      value={item[column.field]}
-                      type={column.type || "text"}
-                      onUpdate={(value) =>
-                        onUpdate(item.id, column.field, value)
-                      }
-                    />
-                  ) : (
-                    <TruncatedCell content={item[column.field].toString()} />
-                  )}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                {columns.length > 2 && (
+                  <TruncatedCell
+                    content={item[columns[2].field]}
+                    maxLength={50}
+                    className="text-gray-600 text-sm"
+                    editable={true}
+                    onUpdate={(value) =>
+                      onUpdate(item.id, columns[2].field, value)
+                    }
+                  />
+                )}
+              </div>
+            </div>
+            <div className="text-right flex items-center">
+              {icon}
+              <EditableCell
+                value={item[columns[1].field]}
+                onUpdate={(value) => onUpdate(item.id, columns[1].field, value)}
+                type="date"
+                className="font-medium text-sm"
+                style={{ color: textColor }}
+              />
+            </div>
+          </div>
+        );
+      })}
       {contextMenu.visible && (
         <div
           className="absolute bg-white border border-gray-200 rounded shadow-md py-2"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           <button
-            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+            className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
             onClick={handleDelete}
           >
+            <FaTrash className="mr-2" />
             Delete
           </button>
         </div>

@@ -78,15 +78,9 @@ const DependencySection = ({ priorityId }) => {
   };
 
   const columns = [
-    { field: "title", header: "Account", sortable: true, editable: true },
-    { field: "person", header: "Person", sortable: true, editable: true },
-    {
-      field: "due_date",
-      header: "Due date",
-      sortable: true,
-      editable: true,
-      type: "date",
-    },
+    { field: "title", header: "Dependency" },
+    { field: "due_date", header: "Due Date" },
+    { field: "person", header: "Person" },
   ];
 
   return (
