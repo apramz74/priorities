@@ -68,9 +68,19 @@ export async function fetchTodos(priorityId, includeCompleted = false) {
 }
 
 export async function addTodo(todo) {
+  let priorityId = todo.priority_id;
+  if (priorityId === "misc") {
+    priorityId = await ensureMiscellaneousPriority();
+    if (!priorityId) {
+      console.error("Failed to get or create Miscellaneous priority");
+      return null;
+    }
+  }
   const { data, error } = await supabase
     .from("todos")
-    .insert([{ ...todo, completed: false, deleted: false }])
+    .insert([
+      { ...todo, priority_id: priorityId, completed: false, deleted: false },
+    ])
     .select();
   if (error) console.log("Error adding todo:", error);
   return data ? data[0] : null;
@@ -196,4 +206,56 @@ export async function updatePriorityOrder(id, newOrder) {
     .eq("id", id);
   if (error) console.log("Error updating priority order:", error);
   return !error;
+}
+
+export async function fetchMiscTodos(includeCompleted = false) {
+  const miscPriorityId = await ensureMiscellaneousPriority();
+  if (!miscPriorityId) {
+    console.error("Failed to get or create Miscellaneous priority");
+    return [];
+  }
+
+  let query = supabase
+    .from("todos")
+    .select("*")
+    .eq("priority_id", miscPriorityId)
+    .is("deleted", false);
+
+  if (!includeCompleted) {
+    query = query.is("completed", false);
+  }
+
+  const { data, error } = await query;
+  if (error) console.log("Error fetching misc todos:", error);
+  return data || [];
+}
+
+export async function ensureMiscellaneousPriority() {
+  const { data, error } = await supabase
+    .from("priorities")
+    .select("*")
+    .eq("name", "Miscellaneous")
+    .single();
+
+  if (error && error.code !== "PGRST116") {
+    console.error("Error checking for Miscellaneous priority:", error);
+    return null;
+  }
+
+  if (data) {
+    return data.id;
+  }
+
+  const { data: newPriority, error: insertError } = await supabase
+    .from("priorities")
+    .insert({ name: "Miscellaneous", completed: false, deleted: false })
+    .select()
+    .single();
+
+  if (insertError) {
+    console.error("Error creating Miscellaneous priority:", insertError);
+    return null;
+  }
+
+  return newPriority.id;
 }
