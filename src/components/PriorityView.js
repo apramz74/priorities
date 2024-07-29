@@ -86,6 +86,7 @@ const PriorityView = ({
         selectedPriority={selectedPriority}
         onSelectPriority={handleSelectPriority}
         onGoHome={handleGoHome}
+        setView={setView}
       />
 
       <div className="bg-white shadow-md rounded-lg p-6">

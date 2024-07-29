@@ -3,6 +3,7 @@ import "./App.css";
 import "./index.css";
 import HomeView from "./components/HomeView";
 import PriorityView from "./components/PriorityView";
+import MiscellaneousView from "./components/MiscellaneousView";
 import { fetchPriorities, addPriority as apiAddPriority } from "./utils/api";
 
 const PriorityManagementTool = () => {
@@ -54,10 +55,10 @@ const PriorityManagementTool = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-7xl mx-auto">
-        {view === "home" ? (
+  const renderView = () => {
+    switch (view) {
+      case "home":
+        return (
           <HomeView
             priorities={priorities}
             updatePriorities={updatePriorities}
@@ -68,15 +69,31 @@ const PriorityManagementTool = () => {
             setView={setView}
             inputRef={inputRef}
           />
-        ) : (
+        );
+      case "priority":
+        return (
           <PriorityView
             selectedPriority={selectedPriority}
             setSelectedPriority={setSelectedPriority}
             updatePriorities={updatePriorities}
             setView={setView}
           />
-        )}
-      </div>
+        );
+      case "miscellaneous":
+        return (
+          <MiscellaneousView
+            setView={setView}
+            setSelectedPriority={setSelectedPriority}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="max-w-7xl mx-auto">{renderView()}</div>
     </div>
   );
 };

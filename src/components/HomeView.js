@@ -119,33 +119,47 @@ const HomeView = ({
   }, []);
 
   const filteredPriorities = priorities.filter(
-    (priority) => !priority.deleted && (showCompleted || !priority.completed)
+    (priority) =>
+      !priority.deleted &&
+      priority.name !== "Miscellaneous" &&
+      (showCompleted || !priority.completed)
   );
 
   const activePriorities = priorities.filter(
-    (priority) => !priority.deleted && !priority.completed
+    (priority) =>
+      !priority.deleted &&
+      !priority.completed &&
+      priority.name !== "Miscellaneous"
   );
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Priorities</h2>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Show completed</span>
-            <div
-              className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer ${
-                showCompleted ? "bg-blue-500" : "bg-gray-300"
-              }`}
-              onClick={() => setShowCompleted(!showCompleted)}
-            >
+          <div className="flex items-center space-x-4">
+            <h2 className="text-xl font-semibold">Priorities</h2>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Show completed</span>
               <div
-                className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
-                  showCompleted ? "translate-x-6" : ""
+                className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer ${
+                  showCompleted ? "bg-blue-500" : "bg-gray-300"
                 }`}
-              ></div>
+                onClick={() => setShowCompleted(!showCompleted)}
+              >
+                <div
+                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+                    showCompleted ? "translate-x-6" : ""
+                  }`}
+                ></div>
+              </div>
             </div>
           </div>
+          <button
+            onClick={() => setView("miscellaneous")}
+            className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300 text-sm"
+          >
+            Miscellaneous
+          </button>
         </div>
         <StrictModeDroppable droppableId="priorities">
           {(provided) => (
@@ -154,80 +168,82 @@ const HomeView = ({
               ref={provided.innerRef}
               className="space-y-2"
             >
-              {filteredPriorities.map((priority, index) => (
-                <Draggable
-                  key={priority.id}
-                  draggableId={priority.id.toString()}
-                  index={index}
-                >
-                  {(provided, snapshot) => (
-                    <li
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      className={`bg-white p-4 rounded shadow hover:bg-gray-50 flex items-center ${
-                        snapshot.isDragging ? "border-2 border-blue-500" : ""
-                      } ${priority.completed ? "opacity-50" : ""}`}
-                      onContextMenu={(e) => handleContextMenu(e, priority)}
-                    >
-                      <div
-                        {...provided.dragHandleProps}
-                        className="mr-2 cursor-move"
+              {filteredPriorities
+                .filter((priority) => priority.name !== "Miscellaneous")
+                .map((priority, index) => (
+                  <Draggable
+                    key={priority.id}
+                    draggableId={priority.id.toString()}
+                    index={index}
+                  >
+                    {(provided, snapshot) => (
+                      <li
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className={`bg-white p-4 rounded shadow hover:bg-gray-50 flex items-center ${
+                          snapshot.isDragging ? "border-2 border-blue-500" : ""
+                        } ${priority.completed ? "opacity-50" : ""}`}
+                        onContextMenu={(e) => handleContextMenu(e, priority)}
                       >
-                        ☰
-                      </div>
-                      {editingId === priority.id ? (
-                        <div className="flex items-center space-x-2 flex-grow">
-                          <input
-                            type="text"
-                            value={editedName}
-                            onChange={(e) => setEditedName(e.target.value)}
-                            className="flex-grow border rounded px-2 py-1"
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => handleSave(priority)}
-                            className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={handleCancel}
-                            className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                          >
-                            Cancel
-                          </button>
+                        <div
+                          {...provided.dragHandleProps}
+                          className="mr-2 cursor-move"
+                        >
+                          ☰
                         </div>
-                      ) : (
-                        <div className="flex items-center space-x-2 flex-grow">
-                          <input
-                            type="checkbox"
-                            checked={priority.completed}
-                            onChange={() => handleToggleCompletion(priority)}
-                            className="mr-2"
-                          />
-                          <button
-                            onClick={() => handleEdit(priority)}
-                            className="text-gray-400 hover:text-blue-500 focus:outline-none"
-                          >
-                            <PencilIcon />
-                          </button>
-                          <span
-                            onClick={() => {
-                              setSelectedPriority(priority);
-                              setView("priority");
-                            }}
-                            className={`cursor-pointer flex-grow ${
-                              priority.completed ? "line-through" : ""
-                            }`}
-                          >
-                            {priority.name}
-                          </span>
-                        </div>
-                      )}
-                    </li>
-                  )}
-                </Draggable>
-              ))}
+                        {editingId === priority.id ? (
+                          <div className="flex items-center space-x-2 flex-grow">
+                            <input
+                              type="text"
+                              value={editedName}
+                              onChange={(e) => setEditedName(e.target.value)}
+                              className="flex-grow border rounded px-2 py-1"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => handleSave(priority)}
+                              className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={handleCancel}
+                              className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-2 flex-grow">
+                            <input
+                              type="checkbox"
+                              checked={priority.completed}
+                              onChange={() => handleToggleCompletion(priority)}
+                              className="mr-2"
+                            />
+                            <button
+                              onClick={() => handleEdit(priority)}
+                              className="text-gray-400 hover:text-blue-500 focus:outline-none"
+                            >
+                              <PencilIcon />
+                            </button>
+                            <span
+                              onClick={() => {
+                                setSelectedPriority(priority);
+                                setView("priority");
+                              }}
+                              className={`cursor-pointer flex-grow ${
+                                priority.completed ? "line-through" : ""
+                              }`}
+                            >
+                              {priority.name}
+                            </span>
+                          </div>
+                        )}
+                      </li>
+                    )}
+                  </Draggable>
+                ))}
               {provided.placeholder}
             </ul>
           )}
