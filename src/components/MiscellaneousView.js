@@ -8,6 +8,7 @@ import {
   toggleDeleted,
   toggleComplete,
   fetchPriorities,
+  ensureMiscellaneousPriority,
 } from "../utils/api";
 import PlusIcon from "./PlusIcon";
 
@@ -36,9 +37,14 @@ const MiscellaneousView = ({ setView, setSelectedPriority }) => {
 
   const handleAddTodo = async () => {
     if (newTodo.name.trim() && newTodo.due_date) {
+      const miscPriorityId = await ensureMiscellaneousPriority();
+      if (!miscPriorityId) {
+        console.error("Failed to get or create Miscellaneous priority");
+        return;
+      }
       const todo = await addTodo({
         ...newTodo,
-        priority_id: -999999,
+        priority_id: miscPriorityId,
       });
       if (todo) {
         setTodos([...todos, todo]);
