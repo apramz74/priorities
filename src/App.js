@@ -5,6 +5,7 @@ import HomeView from "./components/HomeView";
 import PriorityView from "./components/PriorityView";
 import MiscellaneousView from "./components/MiscellaneousView";
 import { fetchPriorities, addPriority as apiAddPriority } from "./utils/api";
+import Navigation from "./components/Navigation";
 
 const PriorityManagementTool = () => {
   const [view, setView] = useState("home");
@@ -55,6 +56,23 @@ const PriorityManagementTool = () => {
     }
   };
 
+  const handleSelectPriority = (priority) => {
+    setSelectedPriority(priority);
+    setView("priority");
+  };
+
+  const handleGoHome = () => {
+    setSelectedPriority(null);
+    setView("home");
+  };
+
+  const handleSetView = (newView) => {
+    setView(newView);
+    if (newView === "miscellaneous") {
+      setSelectedPriority(null);
+    }
+  };
+
   const renderView = () => {
     switch (view) {
       case "home":
@@ -66,7 +84,7 @@ const PriorityManagementTool = () => {
             setNewPriorityName={setNewPriorityName}
             addPriority={addPriority}
             setSelectedPriority={setSelectedPriority}
-            setView={setView}
+            setView={handleSetView}
             inputRef={inputRef}
           />
         );
@@ -76,13 +94,13 @@ const PriorityManagementTool = () => {
             selectedPriority={selectedPriority}
             setSelectedPriority={setSelectedPriority}
             updatePriorities={updatePriorities}
-            setView={setView}
+            setView={handleSetView}
           />
         );
       case "miscellaneous":
         return (
           <MiscellaneousView
-            setView={setView}
+            setView={handleSetView}
             setSelectedPriority={setSelectedPriority}
           />
         );
@@ -92,8 +110,19 @@ const PriorityManagementTool = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-7xl mx-auto">{renderView()}</div>
+    <div className="min-h-screen bg-[#F6F9FF] flex">
+      <Navigation
+        priorities={priorities}
+        selectedPriority={selectedPriority}
+        onSelectPriority={handleSelectPriority}
+        onGoHome={handleGoHome}
+        setView={handleSetView}
+      />
+      <div className="flex-grow overflow-auto">
+        <div className="max-w-6xl min-w-[1000px] mx-auto p-4">
+          {renderView()}
+        </div>
+      </div>
     </div>
   );
 };

@@ -6,8 +6,8 @@ import {
   toggleComplete,
   fetchTodos,
 } from "../utils/api";
-import Table from "./Table";
-import PlusIcon from "./PlusIcon";
+import { ReactComponent as PlusIcon } from "./plus_icon.svg";
+import ItemComponent from "./ItemComponent";
 
 const TodoSection = ({ priorityId }) => {
   const [todos, setTodos] = useState([]);
@@ -17,7 +17,10 @@ const TodoSection = ({ priorityId }) => {
 
   const loadTodos = useCallback(async () => {
     const fetchedTodos = await fetchTodos(priorityId, showCompleted);
-    setTodos(fetchedTodos);
+    const sortedTodos = fetchedTodos.sort(
+      (a, b) => new Date(a.due_date) - new Date(b.due_date)
+    );
+    setTodos(sortedTodos);
   }, [priorityId, showCompleted]);
 
   useEffect(() => {
@@ -31,7 +34,12 @@ const TodoSection = ({ priorityId }) => {
         priority_id: priorityId,
       });
       if (todo) {
-        setTodos([...todos, todo]);
+        setTodos((prevTodos) => {
+          const updatedTodos = [...prevTodos, todo];
+          return updatedTodos.sort(
+            (a, b) => new Date(a.due_date) - new Date(b.due_date)
+          );
+        });
         setNewTodo({ name: "", due_date: "", notes: "" });
         setIsFormVisible(false);
       }
@@ -42,7 +50,14 @@ const TodoSection = ({ priorityId }) => {
     const updatedTodo = { ...todos.find((t) => t.id === id), [field]: value };
     const result = await updateTodo(updatedTodo);
     if (result) {
-      setTodos(todos.map((t) => (t.id === result.id ? result : t)));
+      setTodos((prevTodos) => {
+        const updatedTodos = prevTodos.map((t) =>
+          t.id === result.id ? result : t
+        );
+        return updatedTodos.sort(
+          (a, b) => new Date(a.due_date) - new Date(b.due_date)
+        );
+      });
     }
   };
 
@@ -50,42 +65,44 @@ const TodoSection = ({ priorityId }) => {
     const todo = todos.find((t) => t.id === id);
     const success = await toggleComplete("todos", id, !todo.completed);
     if (success) {
-      await loadTodos();
+      loadTodos();
     }
   };
 
   const handleToggleDeleted = async (id) => {
     const success = await toggleDeleted("todos", id, true);
     if (success) {
-      await loadTodos();
+      loadTodos();
     }
   };
 
-  const columns = [
-    { field: "name", header: "Task" },
-    { field: "due_date", header: "Due Date" },
-    { field: "notes", header: "Notes" },
-  ];
+  const handleToggleShowCompleted = async () => {
+    setShowCompleted((prev) => !prev);
+  };
+
+  useEffect(() => {
+    loadTodos();
+  }, [showCompleted, loadTodos]);
 
   return (
-    <div className="bg-white rounded shadow">
-      <div className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center space-x-4">
-          <h3 className="text-lg font-semibold">To-do List</h3>
+    <div className="p-0">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <h3 className="text-lg font-bold mr-2">To Do</h3>
           <button
             onClick={() => setIsFormVisible(!isFormVisible)}
-            className="text-gray-400 hover:text-blue-500 focus:outline-none"
+            className="text-purple-600 hover:text-purple-800 focus:outline-none"
           >
-            <PlusIcon />
+            <PlusIcon className="w-5 h-5" />
           </button>
         </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-600">Show completed</span>
+        <div className="flex items-center">
+          <span className="text-xs text-gray-600 mr-2">Show completed</span>
           <div
             className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer ${
               showCompleted ? "bg-blue-500" : "bg-gray-300"
             }`}
-            onClick={() => setShowCompleted(!showCompleted)}
+            onClick={handleToggleShowCompleted}
           >
             <div
               className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
@@ -95,8 +112,21 @@ const TodoSection = ({ priorityId }) => {
           </div>
         </div>
       </div>
+      <div className="space-y-2">
+        {todos.map((todo) => (
+          <ItemComponent
+            key={todo.id}
+            item={todo}
+            onToggleComplete={handleToggleComplete}
+            onUpdate={handleUpdateTodo}
+            onDelete={handleToggleDeleted}
+            borderColor="border-indigo-800 border-2"
+            itemType="todo"
+          />
+        ))}
+      </div>
       {isFormVisible && (
-        <div className="p-4 space-y-2">
+        <div className="mt-4 space-y-2">
           <input
             type="text"
             value={newTodo.name}
@@ -121,24 +151,11 @@ const TodoSection = ({ priorityId }) => {
           />
           <button
             onClick={handleAddTodo}
-            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
+            className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 text-sm"
           >
             Add Task
           </button>
         </div>
-      )}
-      {todos.length > 0 ? (
-        <Table
-          data={todos}
-          columns={columns}
-          onUpdate={handleUpdateTodo}
-          onDelete={handleToggleDeleted}
-          onToggleComplete={handleToggleComplete}
-        />
-      ) : (
-        <p className="text-gray-500 italic p-4">
-          {showCompleted ? "No completed tasks." : "No active tasks."}
-        </p>
       )}
     </div>
   );
