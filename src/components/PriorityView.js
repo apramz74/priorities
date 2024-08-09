@@ -92,7 +92,11 @@ const PriorityView = ({
           </div>
         )}
 
-        <MilestoneProgress milestones={milestones} />
+        <MilestoneProgress
+          milestones={milestones}
+          setMilestones={setMilestones}
+          selectedPriority={selectedPriority}
+        />
 
         <div className="space-y-6 w-full">
           <TodoSection
