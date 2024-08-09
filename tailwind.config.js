@@ -8,6 +8,8 @@ module.exports = {
           100: "#e0e7ff",
           600: "#4f46e5",
           700: "#4338ca",
+          900: "#1e1e3a",
+          deep: "#0000D1",
         },
       },
       fontFamily: {

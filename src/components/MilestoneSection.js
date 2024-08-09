@@ -186,7 +186,7 @@ const MilestoneSection = ({ milestones, setMilestones, priorityId }) => {
             {icon}
           </div>
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col border-2 border-indigo-900 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="font-medium text-lg">{milestone.title}</span>

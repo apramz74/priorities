@@ -6,8 +6,8 @@ import {
   toggleComplete,
   fetchDependencies,
 } from "../utils/api";
-import Table from "./Table";
-import PlusIcon from "./PlusIcon";
+import ItemComponent from "./ItemComponent";
+import { ReactComponent as PlusIcon } from "./plus_icon.svg";
 
 const DependencySection = ({ priorityId }) => {
   const [dependencies, setDependencies] = useState([]);
@@ -24,7 +24,10 @@ const DependencySection = ({ priorityId }) => {
       priorityId,
       showCompleted
     );
-    setDependencies(fetchedDependencies);
+    const sortedDependencies = fetchedDependencies.sort(
+      (a, b) => new Date(a.due_date) - new Date(b.due_date)
+    );
+    setDependencies(sortedDependencies);
   }, [priorityId, showCompleted]);
 
   useEffect(() => {
@@ -38,7 +41,12 @@ const DependencySection = ({ priorityId }) => {
         priority_id: priorityId,
       });
       if (dependency) {
-        setDependencies([...dependencies, dependency]);
+        setDependencies((prevDependencies) => {
+          const updatedDependencies = [...prevDependencies, dependency];
+          return updatedDependencies.sort(
+            (a, b) => new Date(a.due_date) - new Date(b.due_date)
+          );
+        });
         setNewDependency({ title: "", person: "", due_date: "" });
         setIsFormVisible(false);
       }
@@ -52,9 +60,14 @@ const DependencySection = ({ priorityId }) => {
     };
     const result = await updateDependency(updatedDependency);
     if (result) {
-      setDependencies(
-        dependencies.map((d) => (d.id === result.id ? result : d))
-      );
+      setDependencies((prevDependencies) => {
+        const updatedDependencies = prevDependencies.map((d) =>
+          d.id === result.id ? result : d
+        );
+        return updatedDependencies.sort(
+          (a, b) => new Date(a.due_date) - new Date(b.due_date)
+        );
+      });
     }
   };
 
@@ -66,7 +79,7 @@ const DependencySection = ({ priorityId }) => {
       !dependency.completed
     );
     if (success) {
-      await loadDependencies();
+      loadDependencies();
     }
   };
 
@@ -77,31 +90,33 @@ const DependencySection = ({ priorityId }) => {
     }
   };
 
-  const columns = [
-    { field: "title", header: "Dependency" },
-    { field: "due_date", header: "Due Date" },
-    { field: "person", header: "Person" },
-  ];
+  const handleToggleShowCompleted = async () => {
+    setShowCompleted((prev) => !prev);
+  };
+
+  useEffect(() => {
+    loadDependencies();
+  }, [showCompleted, loadDependencies]);
 
   return (
-    <div className="bg-white rounded shadow">
-      <div className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center space-x-4">
-          <h3 className="text-lg font-semibold">Dependencies</h3>
+    <div className="p-0">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <h3 className="text-lg font-semibold mr-2">Dependencies</h3>
           <button
             onClick={() => setIsFormVisible(!isFormVisible)}
-            className="text-gray-400 hover:text-blue-500 focus:outline-none"
+            className="text-gray-600 hover:text-gray-800 focus:outline-none"
           >
-            <PlusIcon />
+            <PlusIcon className="w-5 h-5" />
           </button>
         </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-600">Show completed</span>
+        <div className="flex items-center">
+          <span className="text-xs text-gray-600 mr-2">Show completed</span>
           <div
             className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer ${
               showCompleted ? "bg-blue-500" : "bg-gray-300"
             }`}
-            onClick={() => setShowCompleted(!showCompleted)}
+            onClick={handleToggleShowCompleted}
           >
             <div
               className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
@@ -111,8 +126,21 @@ const DependencySection = ({ priorityId }) => {
           </div>
         </div>
       </div>
+      <div className="space-y-2">
+        {dependencies.map((dependency) => (
+          <ItemComponent
+            key={dependency.id}
+            item={dependency}
+            onToggleComplete={handleToggleComplete}
+            onUpdate={handleUpdateDependency}
+            onDelete={handleToggleDeleted}
+            borderColor="border-gray-200"
+            itemType="dependency"
+          />
+        ))}
+      </div>
       {isFormVisible && (
-        <div className="p-4 space-y-2">
+        <div className="mt-4 space-y-2">
           <input
             type="text"
             value={newDependency.title}
@@ -141,26 +169,11 @@ const DependencySection = ({ priorityId }) => {
           />
           <button
             onClick={handleAddDependency}
-            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
+            className="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700 text-sm"
           >
             Add Dependency
           </button>
         </div>
-      )}
-      {dependencies.length > 0 ? (
-        <Table
-          data={dependencies}
-          columns={columns}
-          onUpdate={handleUpdateDependency}
-          onDelete={handleToggleDeleted}
-          onToggleComplete={handleToggleComplete}
-        />
-      ) : (
-        <p className="text-gray-500 italic p-4">
-          {showCompleted
-            ? "No completed dependencies."
-            : "No active dependencies."}
-        </p>
       )}
     </div>
   );

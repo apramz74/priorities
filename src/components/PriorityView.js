@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
 import TodoSection from "./TodoSection";
-import MilestoneSection from "./MilestoneSection";
+import MilestoneProgress from "./MilestoneProgress";
 import DependencySection from "./DependencySection";
-import Navigation from "./Navigation";
-import PencilIcon from "./PencilIcon";
+import { ReactComponent as PencilIcon } from "./pencil_icon.svg";
 import {
   updatePriority,
   fetchTodos,
   fetchMilestones,
   fetchDependencies,
-  fetchPriorities,
 } from "../utils/api";
 
 const PriorityView = ({
@@ -21,22 +19,8 @@ const PriorityView = ({
   const [todos, setTodos] = useState([]);
   const [milestones, setMilestones] = useState([]);
   const [dependencies, setDependencies] = useState([]);
-  const [priorities, setPriorities] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState("");
-
-  useEffect(() => {
-    console.log(
-      "PriorityView received new selectedPriority:",
-      selectedPriority
-    );
-  }, [selectedPriority]);
-  useEffect(() => {
-    fetchPriorities().then((data) => {
-      const activePriorities = data.filter((p) => !p.deleted && !p.completed);
-      setPriorities(activePriorities);
-    });
-  }, []);
 
   useEffect(() => {
     if (selectedPriority) {
@@ -67,29 +51,13 @@ const PriorityView = ({
     setEditedName("");
   };
 
-  const handleSelectPriority = (priority) => {
-    setSelectedPriority(priority);
-  };
-
-  const handleGoHome = () => {
-    setView("home");
-  };
-
   if (!selectedPriority) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="space-y-6">
-      <Navigation
-        priorities={priorities}
-        selectedPriority={selectedPriority}
-        onSelectPriority={handleSelectPriority}
-        onGoHome={handleGoHome}
-        setView={setView}
-      />
-
-      <div className="bg-white shadow-md rounded-lg p-6">
+    <div className="flex-grow">
+      <div className="p-6">
         {isEditing ? (
           <div className="flex items-center space-x-2 mb-4">
             <input
@@ -113,37 +81,30 @@ const PriorityView = ({
             </button>
           </div>
         ) : (
-          <div className="flex items-center space-x-2 mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-black">{selectedPriority.name}</h2>
             <button
               onClick={handleEdit}
               className="text-gray-400 hover:text-blue-500 focus:outline-none"
             >
               <PencilIcon className="w-5 h-5" />
             </button>
-            <h2 className="text-2xl font-semibold">{selectedPriority.name}</h2>
           </div>
         )}
 
-        <div className="flex gap-6">
-          <div className="w-2/3">
-            <TodoSection
-              todos={todos}
-              setTodos={setTodos}
-              priorityId={selectedPriority.id}
-            />
-          </div>
-          <div className="w-1/3 space-y-6">
-            <MilestoneSection
-              milestones={milestones}
-              setMilestones={setMilestones}
-              priorityId={selectedPriority.id}
-            />
-            <DependencySection
-              dependencies={dependencies}
-              setDependencies={setDependencies}
-              priorityId={selectedPriority.id}
-            />
-          </div>
+        <MilestoneProgress milestones={milestones} />
+
+        <div className="space-y-6 w-full">
+          <TodoSection
+            todos={todos}
+            setTodos={setTodos}
+            priorityId={selectedPriority.id}
+          />
+          <DependencySection
+            dependencies={dependencies}
+            setDependencies={setDependencies}
+            priorityId={selectedPriority.id}
+          />
         </div>
       </div>
     </div>
