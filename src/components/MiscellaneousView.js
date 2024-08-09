@@ -1,44 +1,28 @@
 import React, { useState, useEffect, useCallback } from "react";
 import TodoSection from "./TodoSection";
-import {
-  fetchMiscTodos,
-  addTodo,
-  updateTodo,
-  toggleDeleted,
-  toggleComplete,
-  fetchPriorities,
-} from "../utils/api";
+import { fetchMiscTodos, ensureMiscellaneousPriority } from "../utils/api";
 
 const MiscellaneousView = ({ setView, setSelectedPriority }) => {
-  const [todos, setTodos] = useState([]);
-  const [showCompleted, setShowCompleted] = useState(false);
+  const [miscPriorityId, setMiscPriorityId] = useState(null);
 
-  const loadTodos = useCallback(async () => {
-    const fetchedTodos = await fetchMiscTodos(showCompleted);
-    setTodos(fetchedTodos);
-  }, [showCompleted]);
+  const loadMiscPriority = useCallback(async () => {
+    const priorityId = await ensureMiscellaneousPriority();
+    if (priorityId) {
+      setMiscPriorityId(priorityId);
+    } else {
+      console.error("Failed to get or create Miscellaneous priority");
+    }
+  }, []);
 
   useEffect(() => {
-    loadTodos();
-  }, [loadTodos]);
-
-  const handleToggleShowCompleted = () => {
-    setShowCompleted((prev) => !prev);
-  };
+    loadMiscPriority();
+  }, [loadMiscPriority]);
 
   return (
     <div className="space-y-6">
       <div className="rounded-lg p-6">
         <h2 className="text-2xl font-semibold mb-4">Miscellaneous Tasks</h2>
-        <div className="space-y-6 w-full">
-          <TodoSection
-            todos={todos}
-            setTodos={setTodos}
-            priorityId={29}
-            showCompleted={showCompleted}
-            onToggleShowCompleted={handleToggleShowCompleted}
-          />
-        </div>
+        {miscPriorityId && <TodoSection priorityId={miscPriorityId} />}
       </div>
     </div>
   );

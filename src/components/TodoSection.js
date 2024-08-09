@@ -6,7 +6,6 @@ import {
   toggleComplete,
   fetchTodos,
 } from "../utils/api";
-import Table from "./Table";
 import { ReactComponent as PlusIcon } from "./plus_icon.svg";
 import ItemComponent from "./ItemComponent";
 

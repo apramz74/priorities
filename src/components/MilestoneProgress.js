@@ -19,7 +19,7 @@ const MilestoneProgress = ({ milestones }) => {
   return (
     <div className="mb-6">
       <div className="flex items-center mb-2">
-        <div className="text-4xl font-bold text-gray-800 mr-2">{daysLeft}</div>
+        <div className="text-3xl font-black text-gray-800 mr-2">{daysLeft}</div>
         <div className="text-gray-600">days left for this project</div>
       </div>
       <div className="flex">
