@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import TodoSection from "./TodoSection";
-import { fetchMiscTodos, ensureMiscellaneousPriority } from "../utils/api";
+import { ensureMiscellaneousPriority } from "../utils/api";
 
 
 const MiscellaneousView = ({ setView, setSelectedPriority }) => {
