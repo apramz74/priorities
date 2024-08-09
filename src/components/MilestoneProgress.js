@@ -158,7 +158,9 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
             } text-gray-800 mr-2`}
             style={projectStatus.isSpecial ? { fontSize: "15px" } : {}}
           >
-            {projectStatus.text}
+            <h3 className="text-xl font-bold font-inter">
+              {projectStatus.text}
+            </h3>
           </div>
         ) : (
           <div className="flex items-baseline">

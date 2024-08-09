@@ -24,17 +24,22 @@ const PriorityManagementTool = () => {
     setPriorities(activePriorities);
   }
 
-  async function addPriority() {
-    const activePriorities = priorities.filter(
-      (p) => !p.deleted && !p.completed
-    );
-    if (newPriorityName.trim() && activePriorities.length < 5) {
-      const newPriority = await apiAddPriority(newPriorityName);
-      if (newPriority) {
-        setPriorities([...priorities, newPriority]);
-        setNewPriorityName("");
-      }
+  async function addPriority(name, slot) {
+    const newPriority = await apiAddPriority(name, slot);
+    if (newPriority) {
+      setPriorities((prevPriorities) => {
+        const activePriorities = prevPriorities.filter(
+          (p) => !p.deleted && !p.completed
+        );
+        const completedPriorities = prevPriorities.filter((p) => p.completed);
+        const updatedActivePriorities = [...activePriorities];
+        updatedActivePriorities.splice(slot, 0, newPriority);
+        return [...updatedActivePriorities.slice(0, 5), ...completedPriorities];
+      });
+      setSelectedPriority(newPriority);
+      setView("priority");
     }
+    return newPriority;
   }
 
   const updatePriorities = (updatedPriorities) => {
@@ -92,15 +97,18 @@ const PriorityManagementTool = () => {
         return (
           <PriorityView
             selectedPriority={selectedPriority}
-            setSelectedPriority={setSelectedPriority}
             updatePriorities={updatePriorities}
-            setView={handleSetView}
+            setView={setView}
+            setSelectedPriority={setSelectedPriority}
+            activePrioritiesCount={
+              priorities.filter((p) => !p.completed).length
+            }
           />
         );
       case "miscellaneous":
         return (
           <MiscellaneousView
-            setView={handleSetView}
+            setView={setView}
             setSelectedPriority={setSelectedPriority}
           />
         );
@@ -117,6 +125,8 @@ const PriorityManagementTool = () => {
         onSelectPriority={handleSelectPriority}
         onGoHome={handleGoHome}
         setView={handleSetView}
+        addPriority={addPriority}
+        setSelectedPriority={setSelectedPriority}
       />
       <div className="flex-grow overflow-auto">
         <div className="max-w-6xl min-w-[1000px] mx-auto p-4">

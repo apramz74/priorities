@@ -4,7 +4,7 @@ export async function fetchPriorities() {
   const { data, error } = await supabase
     .from("priorities")
     .select("*")
-    .is("deleted", false) // Only fetch non-deleted priorities
+    .is("deleted", false)
     .order("order", { ascending: true })
     .order("created_at", { ascending: true });
 
@@ -15,10 +15,10 @@ export async function fetchPriorities() {
 
   return data || [];
 }
-export async function addPriority(name) {
+export async function addPriority(name, slot) {
   const { data, error } = await supabase
     .from("priorities")
-    .insert([{ name, completed: false, deleted: false }])
+    .insert([{ name, completed: false, deleted: false, order: slot }])
     .select();
   if (error) console.log("Error adding priority:", error);
   return data ? data[0] : null;
