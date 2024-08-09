@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import TodoSection from "./TodoSection";
 import { fetchMiscTodos, ensureMiscellaneousPriority } from "../utils/api";
+
 
 const MiscellaneousView = ({ setView, setSelectedPriority }) => {
   const [miscPriorityId, setMiscPriorityId] = useState(null);
@@ -17,6 +19,7 @@ const MiscellaneousView = ({ setView, setSelectedPriority }) => {
   useEffect(() => {
     loadMiscPriority();
   }, [loadMiscPriority]);
+
 
   return (
     <div className="space-y-6">
