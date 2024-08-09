@@ -1,4 +1,6 @@
 import React from "react";
+import logo from "./logo.png";
+import { ReactComponent as MiscIcon } from "./misc_icon.svg"; // Import SVG as a React component
 
 const Navigation = ({
   priorities,
@@ -8,36 +10,47 @@ const Navigation = ({
   setView,
 }) => {
   return (
-    <nav className="flex items-center justify-between mb-4">
-      <div className="flex items-center space-x-2">
+    <nav className="w-96 bg-white border-r border-gray-200 h-screen p-6">
+      <div className="mb-8">
         <button
           onClick={onGoHome}
-          className="text-blue-500 hover:text-blue-700"
+          className="text-[#0000D1] font-extrabold text-xl flex items-center"
         >
-          ← Home
+          <img src={logo} alt="Prioritiez Logo" className="h-10 w-10 mr-2" />
+          prioritiez
         </button>
-        {priorities
-          .filter((priority) => priority.name !== "Miscellaneous")
-          .map((priority) => (
-            <button
-              key={priority.id}
-              onClick={() => onSelectPriority(priority)}
-              className={`px-3 py-1 rounded-full ${
-                selectedPriority?.id === priority.id
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              {priority.name}
-            </button>
-          ))}
       </div>
-      <button
-        onClick={() => setView("miscellaneous")}
-        className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300 text-sm"
-      >
-        Miscellaneous
-      </button>
+
+      <div className="mb-6">
+        <ul className="space-y-3">
+          {priorities
+            .filter((priority) => priority.name !== "Miscellaneous")
+            .map((priority, index) => (
+              <li key={priority.id}>
+                <button
+                  onClick={() => onSelectPriority(priority)}
+                  className={`w-full text-left py-2 px-4 rounded flex items-center text-sm ${
+                    selectedPriority?.id === priority.id
+                      ? "bg-indigo-100 text-indigo-700"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  <span className="font-black mr-6 w-6">P{index + 1}</span>
+                  <span className="font-medium">{priority.name}</span>
+                </button>
+              </li>
+            ))}
+        </ul>
+      </div>
+      <div className="mb-8">
+        <button
+          onClick={() => setView("miscellaneous")}
+          className="w-full text-left py-2 px-3 rounded text-gray-600 hover:bg-gray-100 flex items-center text-sm"
+        >
+          <MiscIcon className="w-5 h-5 mr-6" />
+          <span className="font-medium">Miscellaneous</span>
+        </button>
+      </div>
     </nav>
   );
 };
