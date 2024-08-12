@@ -49,11 +49,13 @@ const PriorityView = ({
     };
   }, []);
 
-  const handleUpdatePriority = async () => {
+  const handleUpdatePriority = async (e) => {
+    e.preventDefault(); // Prevent form submission from refreshing the page
     const updatedPriority = { ...selectedPriority, name: editedName };
     const success = await updatePriority(updatedPriority);
     if (success) {
       updatePriorities(updatedPriority);
+      setSelectedPriority(updatedPriority);
       setIsEditing(false);
     } else {
       console.error("Failed to update priority");
@@ -102,7 +104,10 @@ const PriorityView = ({
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center justify-between mb-4">
             {isEditing ? (
-              <div className="flex items-center space-x-2">
+              <form
+                onSubmit={handleUpdatePriority}
+                className="flex items-center space-x-2"
+              >
                 <input
                   type="text"
                   value={editedName}
@@ -111,18 +116,19 @@ const PriorityView = ({
                   autoFocus
                 />
                 <button
-                  onClick={handleUpdatePriority}
+                  type="submit"
                   className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
                 >
                   Save
                 </button>
                 <button
+                  type="button"
                   onClick={handleCancel}
                   className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                 >
                   Cancel
                 </button>
-              </div>
+              </form>
             ) : (
               <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-black">{selectedPriority.name}</h2>
