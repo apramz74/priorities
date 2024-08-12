@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import TrashIcon from "./TrashIcon";
+import { ReactComponent as CalendarIcon } from "../components/calendar_icon.svg";
 
 const EditableField = ({ value, onUpdate, type = "text", className = "" }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -62,6 +63,22 @@ const ItemComponent = ({
   const isDependency = itemType === "dependency";
   const [contextMenu, setContextMenu] = useState(null);
 
+  const getDueDateColor = (dueDate) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDateObj = new Date(dueDate);
+    dueDateObj.setHours(0, 0, 0, 0);
+
+    if (dueDateObj < today) {
+      return "#FF0000";
+    } else if (dueDateObj.getTime() === today.getTime()) {
+      return "#FFA800";
+    }
+    return "currentColor";
+  };
+
+  const dueDateColor = getDueDateColor(item.due_date);
+
   const handleContextMenu = (e) => {
     e.preventDefault();
     setContextMenu({
@@ -83,17 +100,17 @@ const ItemComponent = ({
 
   return (
     <div
-      className={`flex items-center space-x-3 p-3 bg-white border ${borderColor} rounded-lg
-                  hover:bg-[#E5E5FF] hover:shadow-[0_0_10px_rgba(0,0,209,0.3)] transition-all duration-200 min-h-[65px]`}
+      className={`flex items-center p-3 bg-white border ${borderColor} rounded-lg
+                  hover:bg-[#E5E5FF] hover:shadow-[0_0_10px_rgba(0,0,209,0.3)] transition-all duration-200 min-h-[65px] relative`}
       onContextMenu={handleContextMenu}
     >
       <input
         type="checkbox"
         checked={item.completed}
         onChange={() => onToggleComplete(item.id)}
-        className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
+        className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 mr-3"
       />
-      <div className="flex-grow">
+      <div className="flex-grow pr-32">
         <EditableField
           value={isDependency ? item.title : item.name}
           onUpdate={(value) =>
@@ -109,12 +126,18 @@ const ItemComponent = ({
           className="text-xs text-gray-500"
         />
       </div>
-      <EditableField
-        value={item.due_date}
-        onUpdate={(value) => onUpdate(item.id, "due_date", value)}
-        type="date"
-        className="text-xs text-gray-500 w-auto"
-      />
+      <div
+        className="flex items-center absolute right-3 top-1/2 transform -translate-y-1/2 w-28"
+        style={{ color: dueDateColor }}
+      >
+        <CalendarIcon className="w-4 h-4 absolute left-0" />
+        <EditableField
+          value={item.due_date}
+          onUpdate={(value) => onUpdate(item.id, "due_date", value)}
+          type="date"
+          className="text-xs w-full pl-6"
+        />
+      </div>
       {contextMenu && (
         <div
           className="fixed bg-white border border-gray-200 rounded-lg shadow-md py-2"
