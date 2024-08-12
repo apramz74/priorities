@@ -66,17 +66,32 @@ const ItemComponent = ({
   const getDueDateColor = (dueDate) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const dueDateObj = new Date(dueDate);
-    dueDateObj.setHours(0, 0, 0, 0);
 
-    if (dueDateObj < today) {
-      return "#FF0000";
-    } else if (dueDateObj.getTime() === today.getTime()) {
-      return "#FFA800";
+    // Create date object and set to start of day in local time
+    const dueDateObj = new Date(dueDate + "T00:00:00");
+
+    // Compare year, month, and day
+    const isToday =
+      today.getFullYear() === dueDateObj.getFullYear() &&
+      today.getMonth() === dueDateObj.getMonth() &&
+      today.getDate() === dueDateObj.getDate();
+
+    const isPast = dueDateObj < today;
+
+    if (isPast && !isToday) {
+      return "#FF0000"; // Red for past due dates
+    } else if (isToday) {
+      return "#FFA800"; // Orange for today
     }
-    return "currentColor";
+    return "currentColor"; // Default color for future dates
   };
 
+  console.log("Today:", new Date().toISOString());
+  console.log("Due date:", item.due_date);
+  console.log(
+    "Due date as Date object:",
+    new Date(item.due_date).toISOString()
+  );
   const dueDateColor = getDueDateColor(item.due_date);
 
   const handleContextMenu = (e) => {
