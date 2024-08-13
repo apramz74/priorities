@@ -10,6 +10,7 @@ import {
   fetchTodos,
   fetchMilestones,
   fetchDependencies,
+  getNewOrderForReopenedPriority,
 } from "../utils/api";
 
 const PriorityView = ({
@@ -84,7 +85,17 @@ const PriorityView = ({
   };
 
   const handleReopenPriority = async () => {
-    const updatedPriority = { ...selectedPriority, completed: false };
+    const newOrder = await getNewOrderForReopenedPriority();
+    if (newOrder === null) {
+      console.error("Failed to get new order for reopened priority");
+      return;
+    }
+
+    const updatedPriority = {
+      ...selectedPriority,
+      completed: false,
+      order: newOrder,
+    };
     const success = await updatePriority(updatedPriority);
     if (success) {
       updatePriorities(updatedPriority);

@@ -25,9 +25,13 @@ export async function addPriority(name, slot) {
 }
 
 export async function updatePriority(priority) {
+  const updatedPriority = { ...priority };
+  if (priority.completed || priority.deleted) {
+    updatedPriority.order = null;
+  }
   const { error } = await supabase
     .from("priorities")
-    .update(priority)
+    .update(updatedPriority)
     .eq("id", priority.id);
   if (error) console.log("Error updating priority:", error);
   return !error;
@@ -36,7 +40,7 @@ export async function updatePriority(priority) {
 export async function deletePriority(id) {
   const { error } = await supabase
     .from("priorities")
-    .update({ deleted: true })
+    .update({ deleted: true, order: null })
     .eq("id", id);
   if (error) console.log("Error deleting priority:", error);
   return !error;
@@ -45,7 +49,12 @@ export async function deletePriority(id) {
 export async function togglePriorityCompletion(id, completed) {
   const { error } = await supabase
     .from("priorities")
-    .update({ completed })
+    .update({
+      completed,
+      order: completed
+        ? null
+        : supabase.sql`(SELECT COALESCE(MAX(order), -1) + 1 FROM priorities WHERE NOT completed AND NOT deleted)`,
+    })
     .eq("id", id);
   if (error) console.log("Error toggling priority completion:", error);
   return !error;
@@ -199,12 +208,13 @@ export async function deleteTodo(id) {
   return toggleDeleted("todos", id, true);
 }
 
-export async function updatePriorityOrder(id, newOrder) {
-  const { error } = await supabase
-    .from("priorities")
-    .update({ order: newOrder })
-    .eq("id", id);
-  if (error) console.log("Error updating priority order:", error);
+export async function updatePrioritiesOrder(priorities) {
+  const { error } = await supabase.from("priorities").upsert(
+    priorities.map(({ id, order }) => ({ id, order })),
+    { onConflict: "id" }
+  );
+
+  if (error) console.log("Error updating priorities order:", error);
   return !error;
 }
 
@@ -258,4 +268,21 @@ export async function ensureMiscellaneousPriority() {
   }
 
   return newPriority.id;
+}
+
+export async function getNewOrderForReopenedPriority() {
+  const { data, error } = await supabase
+    .from("priorities")
+    .select("order")
+    .is("completed", false)
+    .is("deleted", false)
+    .order("order", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Error getting new order for reopened priority:", error);
+    return null;
+  }
+
+  return data && data.length > 0 ? data[0].order + 1 : 0;
 }
