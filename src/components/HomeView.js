@@ -4,7 +4,7 @@ import {
   updatePriority,
   deletePriority,
   togglePriorityCompletion,
-  updatePriorityOrder,
+  updatePrioritiesOrder,
 } from "../utils/api";
 import PencilIcon from "./PencilIcon";
 import TrashIcon from "./TrashIcon";
@@ -107,9 +107,8 @@ const HomeView = ({
 
     updatePriorities(updatedPriorities);
 
-    for (const priority of updatedPriorities) {
-      await updatePriorityOrder(priority.id, priority.order);
-    }
+    // Update the order in the database
+    await updatePrioritiesOrder(updatedPriorities);
   };
 
   useEffect(() => {
