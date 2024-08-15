@@ -286,3 +286,30 @@ export async function getNewOrderForReopenedPriority() {
 
   return data && data.length > 0 ? data[0].order + 1 : 0;
 }
+
+export async function fetchPrioritySummary() {
+  const priorities = await fetchPriorities();
+  const summaries = [];
+
+  for (const priority of priorities) {
+    const todos = await fetchTodos(priority.id, true);
+    const today = new Date().toISOString().split("T")[0];
+
+    const overdueCount = todos.filter(
+      (todo) => !todo.completed && new Date(todo.due_date) < new Date(today)
+    ).length;
+
+    const dueTodayCount = todos.filter(
+      (todo) => !todo.completed && todo.due_date === today
+    ).length;
+
+    summaries.push({
+      priorityId: priority.id,
+      priorityName: priority.name,
+      overdueCount,
+      dueTodayCount,
+    });
+  }
+
+  return summaries;
+}
