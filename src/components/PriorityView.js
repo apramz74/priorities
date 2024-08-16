@@ -161,11 +161,9 @@ const PriorityView = ({
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-gray-100"
               }`}
-              data-tooltip={
-                activePrioritiesCount >= 5
-                  ? "You already have 5 priorities"
-                  : ""
-              }
+              {...(activePrioritiesCount >= 5
+                ? { "data-tooltip": "You already have 5 priorities" }
+                : {})}
             >
               <RewindIcon className="w-5 h-5 mr-2" />
               <span className="font-inter font-bold text-xs">

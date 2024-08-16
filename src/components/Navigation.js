@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import logo from "./logo.png";
 import { ReactComponent as MiscIcon } from "./misc_icon.svg";
+import { ReactComponent as CompletedCheckmarkIcon } from "./completed_checkmark_icon.svg";
 import AddPriorityModal from "./AddPriorityModal";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { ReactComponent as DragHandleIcon } from "./drag_handle_icon.svg";
@@ -32,12 +33,17 @@ const Navigation = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newPrioritySlot, setNewPrioritySlot] = useState(null);
   const activePriorities = priorities.filter((priority) => !priority.completed);
+  const completedPriorities = priorities.filter(
+    (priority) => priority.completed && priority.name !== "Miscellaneous"
+  );
   const handlePriorityClick = (priority) => {
     onSelectPriority(priority);
-    setView("priority");
+    setView(priority.name === "Miscellaneous" ? "miscellaneous" : "priority");
   };
 
   const handleMiscellaneousClick = () => {
+    const miscPriority = priorities.find((p) => p.name === "Miscellaneous");
+    onSelectPriority(miscPriority || { id: "misc", name: "Miscellaneous" });
     setView("miscellaneous");
   };
 
@@ -91,7 +97,7 @@ const Navigation = ({
               <ul
                 {...provided.droppableProps}
                 ref={provided.innerRef}
-                className="space-y-2 mb-2"
+                className="space-y-1 mb-1"
               >
                 {[...Array(5)].map((_, index) => {
                   const priority = activePriorities[index];
@@ -137,7 +143,7 @@ const Navigation = ({
                               onClick={() => handleAddPriorityClick(index)}
                               className="w-full text-left py-2 px-4 rounded flex items-center text-sm hover:bg-gray-100"
                             >
-                              <span className="font-black mr-6 w-6 flex-shrink-0 text-black">
+                              <span className="font-black mr-6 w-6 flex-shrink-0 text-gray-600">
                                 P{index + 1}
                               </span>
                               <span className="font-medium text-[#0000D1] truncate">
@@ -158,11 +164,38 @@ const Navigation = ({
 
         <button
           onClick={handleMiscellaneousClick}
-          className="w-full text-left py-2 px-4 rounded text-gray-600 hover:bg-gray-100 flex items-center text-sm mt-2"
+          className={`w-full text-left py-2 px-4 rounded flex items-center text-sm mt-1 ${
+            selectedPriority?.name === "Miscellaneous"
+              ? "bg-indigo-100 text-indigo-700"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
         >
-          <MiscIcon className="w-5 h-5 mr-6" />
+          <MiscIcon className="w-5 h-5 mr-7" />
           <span className="font-medium">Miscellaneous</span>
         </button>
+
+        <h3 className="text-sm font-semibold text-gray-600 mb-2 mt-6">
+          History
+        </h3>
+        <ul className="space-y-1">
+          {completedPriorities.map((priority) => (
+            <li key={priority.id} className="relative group">
+              <button
+                onClick={() => handlePriorityClick(priority)}
+                className={`w-full text-left py-2 px-4 rounded flex items-center text-sm ${
+                  selectedPriority?.id === priority.id
+                    ? "bg-indigo-100 text-indigo-700"
+                    : "text-gray-400 hover:bg-gray-100"
+                }`}
+              >
+                <CompletedCheckmarkIcon className="w-5 h-5 mr-7 text-gray-400" />
+                <span className="font-medium truncate line-through">
+                  {priority.name}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
       {isModalOpen && (
         <AddPriorityModal
