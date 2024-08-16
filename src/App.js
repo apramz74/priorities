@@ -63,7 +63,7 @@ const PriorityManagementTool = () => {
 
   const handleSelectPriority = (priority) => {
     setSelectedPriority(priority);
-    setView("priority");
+    setView(priority.id === "misc" ? "miscellaneous" : "priority");
   };
 
   const handleGoHome = () => {
@@ -74,7 +74,10 @@ const PriorityManagementTool = () => {
   const handleSetView = (newView) => {
     setView(newView);
     if (newView === "miscellaneous") {
-      setSelectedPriority(null);
+      const miscPriority = priorities.find((p) => p.name === "Miscellaneous");
+      setSelectedPriority(
+        miscPriority || { id: "misc", name: "Miscellaneous" }
+      );
     }
   };
 
@@ -101,7 +104,9 @@ const PriorityManagementTool = () => {
             setView={setView}
             setSelectedPriority={setSelectedPriority}
             activePrioritiesCount={
-              priorities.filter((p) => !p.completed).length
+              priorities.filter(
+                (p) => !p.completed && p.name !== "Miscellaneous"
+              ).length
             }
           />
         );
@@ -110,6 +115,7 @@ const PriorityManagementTool = () => {
           <MiscellaneousView
             setView={setView}
             setSelectedPriority={setSelectedPriority}
+            selectedPriority={selectedPriority}
           />
         );
       default:

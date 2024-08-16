@@ -1,29 +1,34 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import TodoSection from "./TodoSection";
-import { ensureMiscellaneousPriority } from "../utils/api";
+import { ensureMiscellaneousPriority, fetchMiscTodos } from "../utils/api";
 
-const MiscellaneousView = ({ setView, setSelectedPriority }) => {
-  const [miscPriorityId, setMiscPriorityId] = useState(null);
-
-  const loadMiscPriority = useCallback(async () => {
-    const priorityId = await ensureMiscellaneousPriority();
-    if (priorityId) {
-      setMiscPriorityId(priorityId);
-    } else {
-      console.error("Failed to get or create Miscellaneous priority");
-    }
-  }, []);
+const MiscellaneousView = ({
+  setView,
+  setSelectedPriority,
+  selectedPriority,
+}) => {
+  const [todos, setTodos] = useState([]);
+  const [priorityId, setPriorityId] = useState(null);
 
   useEffect(() => {
-    loadMiscPriority();
-  }, [loadMiscPriority]);
+    const initializeMiscellaneous = async () => {
+      const miscPriorityId = await ensureMiscellaneousPriority();
+      setPriorityId(miscPriorityId);
+      const miscTodos = await fetchMiscTodos();
+      setTodos(miscTodos);
+    };
+
+    initializeMiscellaneous();
+  }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg p-6">
-        <h2 className="text-2xl font-semibold mb-4">Miscellaneous Tasks</h2>
-        {miscPriorityId && <TodoSection priorityId={miscPriorityId} />}
-      </div>
+    <div className="p-6">
+      <h2 className="text-3xl font-black mb-4">Miscellaneous</h2>
+      <TodoSection
+        todos={todos}
+        setTodos={setTodos}
+        priorityId={priorityId || "misc"}
+      />
     </div>
   );
 };
