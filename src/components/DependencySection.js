@@ -8,16 +8,12 @@ import {
 } from "../utils/api";
 import ItemComponent from "./ItemComponent";
 import { ReactComponent as PlusIcon } from "./plus_icon.svg";
+import StandardModal from "./StandardModal";
 
 const DependencySection = ({ priorityId }) => {
   const [dependencies, setDependencies] = useState([]);
-  const [newDependency, setNewDependency] = useState({
-    title: "",
-    person: "",
-    due_date: "",
-  });
-  const [isFormVisible, setIsFormVisible] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const loadDependencies = React.useCallback(async () => {
     const fetchedDependencies = await fetchDependencies(
@@ -34,22 +30,19 @@ const DependencySection = ({ priorityId }) => {
     loadDependencies();
   }, [loadDependencies]);
 
-  const handleAddDependency = async () => {
-    if (newDependency.title && newDependency.person && newDependency.due_date) {
-      const dependency = await addDependency({
-        ...newDependency,
-        priority_id: priorityId,
+  const handleAddDependency = async (data) => {
+    const newDependency = await addDependency({
+      ...data,
+      priority_id: priorityId,
+    });
+    if (newDependency) {
+      setDependencies((prevDependencies) => {
+        const updatedDependencies = [...prevDependencies, newDependency];
+        return updatedDependencies.sort(
+          (a, b) => new Date(a.due_date) - new Date(b.due_date)
+        );
       });
-      if (dependency) {
-        setDependencies((prevDependencies) => {
-          const updatedDependencies = [...prevDependencies, dependency];
-          return updatedDependencies.sort(
-            (a, b) => new Date(a.due_date) - new Date(b.due_date)
-          );
-        });
-        setNewDependency({ title: "", person: "", due_date: "" });
-        setIsFormVisible(false);
-      }
+      setIsModalOpen(false);
     }
   };
 
@@ -72,15 +65,11 @@ const DependencySection = ({ priorityId }) => {
   };
 
   const handleToggleComplete = async (id) => {
-    const dependency = dependencies.find((d) => d.id === id);
-    const success = await toggleComplete(
-      "dependencies",
-      id,
-      !dependency.completed
+    const updatedDependencies = dependencies.filter(
+      (dependency) => dependency.id !== id
     );
-    if (success) {
-      loadDependencies();
-    }
+    setDependencies(updatedDependencies);
+    await toggleComplete("dependencies", id, true);
   };
 
   const handleToggleDeleted = async (id) => {
@@ -98,13 +87,31 @@ const DependencySection = ({ priorityId }) => {
     loadDependencies();
   }, [showCompleted, loadDependencies]);
 
+  const dependencyFields = [
+    {
+      name: "title",
+      label: "Title",
+      type: "text",
+      required: true,
+      placeholder: "Enter dependency title",
+    },
+    {
+      name: "person",
+      label: "Person",
+      type: "text",
+      required: true,
+      placeholder: "Enter person responsible",
+    },
+    { name: "due_date", label: "Due Date", type: "date", required: true },
+  ];
+
   return (
     <div className="p-0">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
           <h3 className="text-lg font-semibold mr-2">Dependencies</h3>
           <button
-            onClick={() => setIsFormVisible(!isFormVisible)}
+            onClick={() => setIsModalOpen(true)}
             className="text-gray-600 hover:text-gray-800 focus:outline-none"
           >
             <PlusIcon className="w-5 h-5" />
@@ -114,7 +121,7 @@ const DependencySection = ({ priorityId }) => {
           <span className="text-xs text-gray-600 mr-2">Show completed</span>
           <div
             className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer ${
-              showCompleted ? "bg-blue-500" : "bg-gray-300"
+              showCompleted ? "bg-indigo-600" : "bg-gray-300"
             }`}
             onClick={handleToggleShowCompleted}
           >
@@ -139,42 +146,13 @@ const DependencySection = ({ priorityId }) => {
           />
         ))}
       </div>
-      {isFormVisible && (
-        <div className="mt-4 space-y-2">
-          <input
-            type="text"
-            value={newDependency.title}
-            onChange={(e) =>
-              setNewDependency({ ...newDependency, title: e.target.value })
-            }
-            className="w-full border rounded px-2 py-1"
-            placeholder="Dependency title"
-          />
-          <input
-            type="text"
-            value={newDependency.person}
-            onChange={(e) =>
-              setNewDependency({ ...newDependency, person: e.target.value })
-            }
-            className="w-full border rounded px-2 py-1"
-            placeholder="Person responsible"
-          />
-          <input
-            type="date"
-            value={newDependency.due_date}
-            onChange={(e) =>
-              setNewDependency({ ...newDependency, due_date: e.target.value })
-            }
-            className="w-full border rounded px-2 py-1"
-          />
-          <button
-            onClick={handleAddDependency}
-            className="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700 text-sm"
-          >
-            Add Dependency
-          </button>
-        </div>
-      )}
+      <StandardModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddDependency}
+        title="Add New Dependency"
+        fields={dependencyFields}
+      />
     </div>
   );
 };
