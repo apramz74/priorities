@@ -8,6 +8,7 @@ import {
   fetchTodos,
 } from "../utils/api";
 import { ReactComponent as PlusIcon } from "./plus_icon.svg";
+import { ReactComponent as EmptyStateIcon } from "./empty_state.svg";
 import ItemComponent from "./ItemComponent";
 
 const TodoSection = ({ priorityId, todos, setTodos }) => {
@@ -26,9 +27,18 @@ const TodoSection = ({ priorityId, todos, setTodos }) => {
   };
 
   const handleToggleComplete = async (id) => {
-    const updatedTodos = todos.filter((item) => item.id !== id);
-    setTodos(updatedTodos);
-    await toggleComplete("todos", id, true);
+    const item = todos.find((todo) => todo.id === id);
+    if (item) {
+      const newCompletedStatus = !item.completed;
+      const success = await toggleComplete("todos", id, newCompletedStatus);
+      if (success) {
+        setTodos(
+          todos.map((todo) =>
+            todo.id === id ? { ...todo, completed: newCompletedStatus } : todo
+          )
+        );
+      }
+    }
   };
 
   const handleUpdateTodo = async (id, field, value) => {
@@ -103,19 +113,26 @@ const TodoSection = ({ priorityId, todos, setTodos }) => {
           </div>
         </div>
       </div>
-      <div className="space-y-2">
-        {filteredTodos.map((todo) => (
-          <ItemComponent
-            key={todo.id}
-            item={todo}
-            onToggleComplete={handleToggleComplete}
-            onUpdate={handleUpdateTodo}
-            onDelete={handleToggleDeleted}
-            borderColor="border-indigo-800 border-2"
-            itemType="todo"
-          />
-        ))}
-      </div>
+      {filteredTodos.length > 0 ? (
+        <div className="space-y-2">
+          {filteredTodos.map((todo) => (
+            <ItemComponent
+              key={todo.id}
+              item={todo}
+              onToggleComplete={handleToggleComplete}
+              onUpdate={handleUpdateTodo}
+              onDelete={handleToggleDeleted}
+              borderColor="border-indigo-800 border-2"
+              itemType="todo"
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-2">
+          <EmptyStateIcon className="w-32 h-32" />
+          <p className="text-gray-500 font-inter text-sm">No todos yet</p>
+        </div>
+      )}
       <StandardModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

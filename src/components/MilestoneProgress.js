@@ -161,7 +161,7 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
           </div>
         ) : (
           <div className="flex items-baseline">
-            <span className="text-3xl font-black text-gray-800 mr-2">
+            <span className="text-3xl font-black text-indigo-deep mr-2">
               {projectStatus.number}
             </span>
             <span
