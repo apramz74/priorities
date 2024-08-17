@@ -111,7 +111,9 @@
   border: 2px solid #d1d5db;
   border-radius: 0.25em;
   outline: none;
-  transition: all 0.3s ease-in-out;
+  transition: all 0.15s ease-in-out;
+  background-color: white;
+  transition: background-color 0.15s, border-color 0.15s;
 }
 
 .indigo-checkbox:checked {
@@ -125,4 +127,8 @@
 
 .indigo-checkbox:focus {
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.5);
+}
+
+.indigo-checkbox:hover:not(:checked) {
+  background-color: white;
 }

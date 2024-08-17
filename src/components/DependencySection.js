@@ -9,6 +9,7 @@ import {
 import ItemComponent from "./ItemComponent";
 import { ReactComponent as PlusIcon } from "./plus_icon.svg";
 import StandardModal from "./StandardModal";
+import { ReactComponent as EmptyStateIcon } from "./empty_state.svg";
 
 const DependencySection = ({ priorityId }) => {
   const [dependencies, setDependencies] = useState([]);
@@ -65,11 +66,24 @@ const DependencySection = ({ priorityId }) => {
   };
 
   const handleToggleComplete = async (id) => {
-    const updatedDependencies = dependencies.filter(
-      (dependency) => dependency.id !== id
-    );
-    setDependencies(updatedDependencies);
-    await toggleComplete("dependencies", id, true);
+    const item = dependencies.find((dependency) => dependency.id === id);
+    if (item) {
+      const newCompletedStatus = !item.completed;
+      const success = await toggleComplete(
+        "dependencies",
+        id,
+        newCompletedStatus
+      );
+      if (success) {
+        setDependencies(
+          dependencies.map((dependency) =>
+            dependency.id === id
+              ? { ...dependency, completed: newCompletedStatus }
+              : dependency
+          )
+        );
+      }
+    }
   };
 
   const handleToggleDeleted = async (id) => {
@@ -133,19 +147,28 @@ const DependencySection = ({ priorityId }) => {
           </div>
         </div>
       </div>
-      <div className="space-y-2">
-        {dependencies.map((dependency) => (
-          <ItemComponent
-            key={dependency.id}
-            item={dependency}
-            onToggleComplete={handleToggleComplete}
-            onUpdate={handleUpdateDependency}
-            onDelete={handleToggleDeleted}
-            borderColor="border-gray-200"
-            itemType="dependency"
-          />
-        ))}
-      </div>
+      {dependencies.length > 0 ? (
+        <div className="space-y-2">
+          {dependencies.map((dependency) => (
+            <ItemComponent
+              key={dependency.id}
+              item={dependency}
+              onToggleComplete={handleToggleComplete}
+              onUpdate={handleUpdateDependency}
+              onDelete={handleToggleDeleted}
+              borderColor="border-gray-200"
+              itemType="dependency"
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center">
+          <EmptyStateIcon className="w-32 h-32" />
+          <p className="text-gray-500 font-inter text-sm">
+            No dependencies yet
+          </p>
+        </div>
+      )}
       <StandardModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

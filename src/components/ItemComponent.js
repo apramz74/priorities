@@ -124,11 +124,11 @@ const ItemComponent = ({
       <input
         type="checkbox"
         checked={item.completed || isCompleting}
-        onChange={() => {
-          setIsCompleting(true);
-          setTimeout(() => {
-            onToggleComplete(item.id);
-          }, 500); // 1 second delay
+        onChange={(e) => {
+          const newCompletedStatus = !item.completed;
+          setIsCompleting(newCompletedStatus);
+          onToggleComplete(item.id);
+          e.target.blur();
         }}
         className="indigo-checkbox mr-3"
       />
