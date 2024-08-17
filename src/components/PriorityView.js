@@ -48,16 +48,13 @@ const PriorityView = ({
   }, []);
 
   const handleUpdatePriorityName = async (newName) => {
-    // Check if the selectedPriority is still the same
-    if (selectedPriority.id === selectedPriority.id) {
-      const updatedPriority = { ...selectedPriority, name: newName };
-      const success = await updatePriority(updatedPriority);
-      if (success) {
-        updatePriorities(updatedPriority);
-        setSelectedPriority(updatedPriority);
-      } else {
-        console.error("Failed to update priority name");
-      }
+    const updatedPriority = { ...selectedPriority, name: newName };
+    const success = await updatePriority(updatedPriority);
+    if (success) {
+      updatePriorities(updatedPriority);
+      setSelectedPriority(updatedPriority);
+    } else {
+      console.error("Failed to update priority name");
     }
   };
 
