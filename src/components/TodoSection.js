@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
+import StandardModal from "./StandardModal";
 import {
   addTodo,
   updateTodo,
@@ -9,80 +10,70 @@ import {
 import { ReactComponent as PlusIcon } from "./plus_icon.svg";
 import ItemComponent from "./ItemComponent";
 
-const TodoSection = ({ priorityId }) => {
-  const [todos, setTodos] = useState([]);
-  const [newTodo, setNewTodo] = useState({ name: "", due_date: "", notes: "" });
-  const [isFormVisible, setIsFormVisible] = useState(false);
+const TodoSection = ({ priorityId, todos, setTodos }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
 
-  const loadTodos = useCallback(async () => {
-    const fetchedTodos = await fetchTodos(priorityId, showCompleted);
-    const sortedTodos = fetchedTodos.sort(
-      (a, b) => new Date(a.due_date) - new Date(b.due_date)
-    );
-    setTodos(sortedTodos);
-  }, [priorityId, showCompleted]);
-
-  useEffect(() => {
-    loadTodos();
-  }, [loadTodos]);
-
-  const handleAddTodo = async () => {
-    if (newTodo.name.trim() && newTodo.due_date) {
-      const todo = await addTodo({
-        ...newTodo,
-        priority_id: priorityId,
-      });
-      if (todo) {
-        setTodos((prevTodos) => {
-          const updatedTodos = [...prevTodos, todo];
-          return updatedTodos.sort(
-            (a, b) => new Date(a.due_date) - new Date(b.due_date)
-          );
-        });
-        setNewTodo({ name: "", due_date: "", notes: "" });
-        setIsFormVisible(false);
-      }
+  const handleAddTodo = async (data) => {
+    const newTodo = await addTodo({
+      ...data,
+      priority_id: priorityId,
+    });
+    if (newTodo) {
+      setTodos([...todos, newTodo]);
+      setIsModalOpen(false);
     }
+  };
+
+  const handleToggleComplete = async (id) => {
+    const updatedTodos = todos.filter((item) => item.id !== id);
+    setTodos(updatedTodos);
+    await toggleComplete("todos", id, true);
   };
 
   const handleUpdateTodo = async (id, field, value) => {
     const updatedTodo = { ...todos.find((t) => t.id === id), [field]: value };
     const result = await updateTodo(updatedTodo);
     if (result) {
-      setTodos((prevTodos) => {
-        const updatedTodos = prevTodos.map((t) =>
-          t.id === result.id ? result : t
-        );
-        return updatedTodos.sort(
-          (a, b) => new Date(a.due_date) - new Date(b.due_date)
-        );
-      });
-    }
-  };
-
-  const handleToggleComplete = async (id) => {
-    const todo = todos.find((t) => t.id === id);
-    const success = await toggleComplete("todos", id, !todo.completed);
-    if (success) {
-      loadTodos();
+      setTodos(todos.map((t) => (t.id === result.id ? result : t)));
     }
   };
 
   const handleToggleDeleted = async (id) => {
     const success = await toggleDeleted("todos", id, true);
     if (success) {
-      loadTodos();
+      const updatedTodos = await fetchTodos(priorityId);
+      setTodos(updatedTodos);
     }
   };
 
   const handleToggleShowCompleted = async () => {
     setShowCompleted((prev) => !prev);
+    const updatedTodos = await fetchTodos(priorityId, !showCompleted);
+    setTodos(updatedTodos);
   };
 
-  useEffect(() => {
-    loadTodos();
-  }, [showCompleted, loadTodos]);
+  const filteredTodos = showCompleted
+    ? todos
+    : todos.filter((todo) => !todo.completed);
+
+  const todoFields = [
+    {
+      name: "name",
+      label: "Title",
+      type: "text",
+      required: true,
+      placeholder: "Enter todo title",
+    },
+    {
+      name: "notes",
+      label: "Notes",
+      type: "textarea",
+      required: false,
+      placeholder: "Enter any additional notes",
+    },
+    { name: "due_date", label: "Due Date", type: "date", required: true },
+  ];
 
   return (
     <div className="p-0">
@@ -90,7 +81,7 @@ const TodoSection = ({ priorityId }) => {
         <div className="flex items-center">
           <h3 className="text-lg font-bold mr-2">To Do</h3>
           <button
-            onClick={() => setIsFormVisible(!isFormVisible)}
+            onClick={() => setIsModalOpen(true)}
             className="text-purple-600 hover:text-purple-800 focus:outline-none"
           >
             <PlusIcon className="w-5 h-5" />
@@ -100,7 +91,7 @@ const TodoSection = ({ priorityId }) => {
           <span className="text-xs text-gray-600 mr-2">Show completed</span>
           <div
             className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer ${
-              showCompleted ? "bg-blue-500" : "bg-gray-300"
+              showCompleted ? "bg-indigo-600" : "bg-gray-300"
             }`}
             onClick={handleToggleShowCompleted}
           >
@@ -113,7 +104,7 @@ const TodoSection = ({ priorityId }) => {
         </div>
       </div>
       <div className="space-y-2">
-        {todos.map((todo) => (
+        {filteredTodos.map((todo) => (
           <ItemComponent
             key={todo.id}
             item={todo}
@@ -125,38 +116,13 @@ const TodoSection = ({ priorityId }) => {
           />
         ))}
       </div>
-      {isFormVisible && (
-        <div className="mt-4 space-y-2">
-          <input
-            type="text"
-            value={newTodo.name}
-            onChange={(e) => setNewTodo({ ...newTodo, name: e.target.value })}
-            className="w-full border rounded px-2 py-1"
-            placeholder="Task name"
-          />
-          <input
-            type="date"
-            value={newTodo.due_date}
-            onChange={(e) =>
-              setNewTodo({ ...newTodo, due_date: e.target.value })
-            }
-            className="w-full border rounded px-2 py-1"
-          />
-          <textarea
-            value={newTodo.notes}
-            onChange={(e) => setNewTodo({ ...newTodo, notes: e.target.value })}
-            className="w-full border rounded px-2 py-1"
-            placeholder="Notes"
-            rows="3"
-          />
-          <button
-            onClick={handleAddTodo}
-            className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 text-sm"
-          >
-            Add Task
-          </button>
-        </div>
-      )}
+      <StandardModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddTodo}
+        title="Add New Todo"
+        fields={todoFields}
+      />
     </div>
   );
 };

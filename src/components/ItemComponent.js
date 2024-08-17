@@ -62,6 +62,7 @@ const ItemComponent = ({
 }) => {
   const isDependency = itemType === "dependency";
   const [contextMenu, setContextMenu] = useState(null);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   const getDueDateColor = (dueDate) => {
     const today = new Date();
@@ -116,29 +117,35 @@ const ItemComponent = ({
   return (
     <div
       className={`flex items-center p-3 bg-white border ${borderColor} rounded-lg
-                  hover:bg-[#E5E5FF] hover:shadow-[0_0_10px_rgba(0,0,209,0.3)] transition-all duration-200 min-h-[65px] relative`}
+                  hover:bg-[#E5E5FF] hover:shadow-[0_0_10px_rgba(0,0,209,0.3)] transition-all duration-300 min-h-[65px] relative overflow-hidden
+                  ${isCompleting ? "opacity-50" : "opacity-100"}`}
       onContextMenu={handleContextMenu}
     >
       <input
         type="checkbox"
-        checked={item.completed}
-        onChange={() => onToggleComplete(item.id)}
-        className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 mr-3"
+        checked={item.completed || isCompleting}
+        onChange={() => {
+          setIsCompleting(true);
+          setTimeout(() => {
+            onToggleComplete(item.id);
+          }, 500); // 1 second delay
+        }}
+        className="indigo-checkbox mr-3"
       />
-      <div className="flex-grow pr-32">
+      <div className="flex-grow min-w-0 pr-32">
         <EditableField
           value={isDependency ? item.title : item.name}
           onUpdate={(value) =>
             onUpdate(item.id, isDependency ? "title" : "name", value)
           }
-          className="text-sm font-medium"
+          className="text-sm font-medium truncate"
         />
         <EditableField
           value={isDependency ? item.person : item.notes}
           onUpdate={(value) =>
             onUpdate(item.id, isDependency ? "person" : "notes", value)
           }
-          className="text-xs text-gray-500"
+          className="text-xs text-gray-500 truncate"
         />
       </div>
       <div

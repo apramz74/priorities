@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { updateMilestone, deleteMilestone, addMilestone } from "../utils/api";
 import PlusIcon from "./PlusIcon";
+import StandardModal from "./StandardModal";
 
 const EditableField = ({ value, onUpdate, type = "text", className = "" }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -57,12 +58,7 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
   );
   const lastMilestone = sortedMilestones[sortedMilestones.length - 1];
   const [contextMenu, setContextMenu] = useState(null);
-  const [isAddingMilestone, setIsAddingMilestone] = useState(false);
-  const [newMilestone, setNewMilestone] = useState({
-    title: "",
-    date: "",
-    status: "not started",
-  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const calculateDaysLeft = (dueDate) => {
     const today = new Date();
@@ -123,15 +119,16 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
     });
   };
 
-  const handleAddMilestone = async (milestone) => {
-    if (milestone.title && milestone.date && selectedPriority) {
+  const handleAddMilestone = async (data) => {
+    if (data.title && data.date && selectedPriority) {
       const newMilestone = await addMilestone({
-        ...milestone,
+        ...data,
+        status: "not started",
         priority_id: selectedPriority.id,
       });
       if (newMilestone) {
         setMilestones([...milestones, newMilestone]);
-        setNewMilestone({ title: "", date: "", status: "not started" });
+        setIsModalOpen(false);
       } else {
         console.error(
           "Unable to add milestone: missing title, date, or selected priority"
@@ -176,74 +173,92 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
           </div>
         )}
       </div>
-      <div className="flex">
-        {sortedMilestones.map((milestone, index) => (
+      {milestones.length === 0 ? (
+        <div className="flex rounded-lg overflow-hidden border-2 border-indigo-300 w-fit">
           <div
-            key={milestone.id}
-            className={`flex-grow h-20 max-w-xl ${
-              milestone.status === "completed" ? "bg-gray-800" : "bg-gray-200"
-            } flex flex-col items-center justify-center border-gray-800 border-r border-t border-b ${
-              index === 0 ? "border-l" : ""
-            }`}
-            onContextMenu={(e) => handleContextMenu(e, milestone)}
+            className="h-20 bg-white flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-all duration-200 group px-6"
+            onClick={() => setIsModalOpen(true)}
           >
-            <div
-              className={`font-semibold flex items-center ${
-                milestone.status === "completed"
-                  ? "text-white"
-                  : "text-gray-800"
-              }`}
-            >
-              {milestone.status === "completed" && (
-                <svg
-                  className="w-4 h-4 mr-1"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              )}
-              M{index + 1}
-            </div>
-            <EditableField
-              value={milestone.title}
-              onUpdate={(value) =>
-                handleUpdateMilestone(milestone, "title", value)
-              }
-              className={`text-xs mt-1 font-inter font-normal text-center ${
-                milestone.status === "completed"
-                  ? "text-white"
-                  : "text-gray-800"
-              }`}
-            />
-            <EditableField
-              value={milestone.date}
-              onUpdate={(value) =>
-                handleUpdateMilestone(milestone, "date", value)
-              }
-              type="date"
-              className={`text-xs mt-1 font-inter font-normal text-center ${
-                milestone.status === "completed"
-                  ? "text-white"
-                  : "text-gray-800"
-              }`}
-            />
+            <PlusIcon className="w-6 h-6 text-indigo-700 group-hover:text-indigo-800" />
+            <span className="text-sm font-medium text-indigo-700 group-hover:text-indigo-800 mt-1">
+              Add milestone
+            </span>
           </div>
-        ))}
-        <div
-          className="flex-grow h-20 max-w-xs bg-gray-100 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-200 transition-all duration-200 group"
-          onClick={() => setIsAddingMilestone(true)}
-        >
-          <PlusIcon className="w-6 h-6 text-gray-400 group-hover:text-gray-600" />
-          <span className="text-sm font-medium text-gray-400 group-hover:text-gray-600 mt-1">
-            Add milestone
-          </span>
         </div>
-      </div>
+      ) : (
+        <div className="flex rounded-lg overflow-hidden border-2 border-indigo-300">
+          {sortedMilestones.map((milestone, index) => (
+            <div
+              key={milestone.id}
+              className={`flex-grow h-20 max-w-xl ${
+                milestone.status === "completed"
+                  ? "bg-indigo-300"
+                  : "bg-indigo-100"
+              } flex flex-col items-center justify-center ${
+                index !== sortedMilestones.length - 1
+                  ? "border-r-2 border-gray-200"
+                  : ""
+              }`}
+              onContextMenu={(e) => handleContextMenu(e, milestone)}
+            >
+              <div
+                className={`font-semibold flex items-center ${
+                  milestone.status === "completed"
+                    ? "text-indigo-600"
+                    : "text-gray-800"
+                }`}
+              >
+                {milestone.status === "completed" && (
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
+                M{index + 1}
+              </div>
+              <EditableField
+                value={milestone.title}
+                onUpdate={(value) =>
+                  handleUpdateMilestone(milestone, "title", value)
+                }
+                className={`text-xs mt-1 font-inter font-normal text-center ${
+                  milestone.status === "completed"
+                    ? "text-indigo-600"
+                    : "text-gray-800"
+                }`}
+              />
+              <EditableField
+                value={milestone.date}
+                onUpdate={(value) =>
+                  handleUpdateMilestone(milestone, "date", value)
+                }
+                type="date"
+                className={`text-xs mt-1 font-inter font-normal text-center ${
+                  milestone.status === "completed"
+                    ? "text-indigo-600"
+                    : "text-gray-800"
+                }`}
+              />
+            </div>
+          ))}
+          <div
+            className="flex-grow h-20 max-w-xs bg-white flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-all duration-200 group"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <PlusIcon className="w-6 h-6 text-indigo-700 group-hover:text-indigo-800" />
+            <span className="text-sm font-medium text-indigo-700 group-hover:text-indigo-800 mt-1">
+              Add milestone
+            </span>
+          </div>
+        </div>
+      )}
       {contextMenu && (
         <div
           className="context-menu fixed z-50"
@@ -336,47 +351,27 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
           </button>
         </div>
       )}
-      {isAddingMilestone && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl">
-            <h3 className="text-lg font-semibold mb-4">Add New Milestone</h3>
-            <input
-              type="text"
-              value={newMilestone.title}
-              onChange={(e) =>
-                setNewMilestone({ ...newMilestone, title: e.target.value })
-              }
-              placeholder="Milestone title"
-              className="w-full border rounded px-2 py-1 mb-2"
-            />
-            <input
-              type="date"
-              value={newMilestone.date}
-              onChange={(e) =>
-                setNewMilestone({ ...newMilestone, date: e.target.value })
-              }
-              className="w-full border rounded px-2 py-1 mb-2"
-            />
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => {
-                  handleAddMilestone(newMilestone);
-                  setIsAddingMilestone(false);
-                }}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => setIsAddingMilestone(false)}
-                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <StandardModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddMilestone}
+        title="Add New Milestone"
+        fields={[
+          {
+            name: "title",
+            label: "Title",
+            type: "text",
+            required: true,
+            placeholder: "Enter milestone title",
+          },
+          {
+            name: "date",
+            label: "Date",
+            type: "date",
+            required: true,
+          },
+        ]}
+      />
     </div>
   );
 };

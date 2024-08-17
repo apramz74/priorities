@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import logo from "./logo.png";
 import { ReactComponent as MiscIcon } from "./misc_icon.svg";
 import { ReactComponent as CompletedCheckmarkIcon } from "./completed_checkmark_icon.svg";
-import AddPriorityModal from "./AddPriorityModal";
+import StandardModal from "./StandardModal";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { ReactComponent as DragHandleIcon } from "./drag_handle_icon.svg";
 
@@ -52,8 +52,8 @@ const Navigation = ({
     setIsModalOpen(true);
   };
 
-  const handleAddPriority = async (name) => {
-    const newPriority = await addPriority(name, newPrioritySlot);
+  const handleAddPriority = async (data) => {
+    const newPriority = await addPriority(data.name, newPrioritySlot);
     if (newPriority) {
       onSelectPriority(newPriority);
       setView("priority");
@@ -69,13 +69,31 @@ const Navigation = ({
     const [reorderedItem] = newActivePriorities.splice(result.source.index, 1);
     newActivePriorities.splice(result.destination.index, 0, reorderedItem);
 
-    const updatedPriorities = newActivePriorities.map((priority, index) => ({
-      ...priority,
-      order: index,
-    }));
+    const updatedActivePriorities = newActivePriorities.map(
+      (priority, index) => ({
+        ...priority,
+        order: index,
+      })
+    );
+
+    // Combine updated active priorities with existing completed priorities
+    const updatedPriorities = [
+      ...updatedActivePriorities,
+      ...completedPriorities,
+    ].sort((a, b) => a.order - b.order);
 
     updatePriorities(updatedPriorities);
   };
+
+  const priorityFields = [
+    {
+      name: "name",
+      label: "Priority Name",
+      type: "text",
+      required: true,
+      placeholder: "Enter priority name",
+    },
+  ];
 
   return (
     <nav className="w-72 bg-white border-r border-gray-200 h-screen p-6 flex flex-col">
@@ -146,7 +164,7 @@ const Navigation = ({
                               <span className="font-black mr-6 w-6 flex-shrink-0 text-gray-600">
                                 P{index + 1}
                               </span>
-                              <span className="font-medium text-[#0000D1] truncate">
+                              <span className="font-medium text-indigo-700 truncate">
                                 Add priority
                               </span>
                             </button>
@@ -197,13 +215,13 @@ const Navigation = ({
           ))}
         </ul>
       </div>
-      {isModalOpen && (
-        <AddPriorityModal
-          onClose={() => setIsModalOpen(false)}
-          onAdd={handleAddPriority}
-          slot={newPrioritySlot + 1}
-        />
-      )}
+      <StandardModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddPriority}
+        title={`Add New Priority (P${newPrioritySlot + 1})`}
+        fields={priorityFields}
+      />
     </nav>
   );
 };
