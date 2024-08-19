@@ -117,8 +117,7 @@ const ItemComponent = ({
   return (
     <div
       className={`flex items-center p-3 bg-white border ${borderColor} rounded-lg
-                  hover:bg-[#E5E5FF] hover:shadow-[0_0_10px_rgba(0,0,209,0.3)] transition-all duration-300 min-h-[65px] relative overflow-hidden
-                  ${isCompleting ? "opacity-50" : "opacity-100"}`}
+                  hover:bg-[#E5E5FF] hover:shadow-[0_0_10px_rgba(0,0,209,0.3)] transition-all duration-300 min-h-[65px] relative overflow-hidden`}
       onContextMenu={handleContextMenu}
     >
       <input
