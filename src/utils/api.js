@@ -96,10 +96,12 @@ export async function addTodo(todo) {
 }
 
 export async function toggleComplete(type, id, completed) {
-  const { error } = await supabase
-    .from(type)
-    .update({ completed })
-    .eq("id", id);
+  const updateData = completed
+    ? { completed, completed_at: new Date().toISOString() }
+    : { completed, completed_at: null };
+
+  const { error } = await supabase.from(type).update(updateData).eq("id", id);
+
   if (error) console.log(`Error toggling ${type} completion:`, error);
   return !error;
 }
@@ -312,4 +314,62 @@ export async function fetchPrioritySummary() {
   }
 
   return summaries;
+}
+
+export async function fetchWeeklyTodos(startDate, endDate) {
+  const { data, error } = await supabase
+    .from("todos")
+    .select(
+      `
+      id,
+      name,
+      due_date,
+      completed,
+      completed_at,
+      priorities(name)
+    `
+    )
+    .or(
+      `and(due_date.gte.${startDate},due_date.lte.${endDate}),and(completed_at.gte.${startDate},completed_at.lte.${endDate})`
+    )
+    .is("deleted", false)
+    .order("due_date", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching weekly todos:", error);
+    return [];
+  }
+
+  return data.map((todo) => ({
+    ...todo,
+    priority_name: todo.priorities.name,
+  }));
+}
+
+export async function fetchCompletedTodos(startDate, endDate) {
+  const { data, error } = await supabase
+    .from("todos")
+    .select(
+      `
+      id,
+      name,
+      completed_at,
+      priorities(name)
+    `
+    )
+    .gte("completed_at", startDate)
+    .lte("completed_at", endDate)
+    .eq("completed", true)
+    .is("deleted", false)
+    .order("completed_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching completed todos:", error);
+    return [];
+  }
+
+  return data.map((todo) => ({
+    ...todo,
+    priority_name: todo.priorities.name,
+  }));
 }
