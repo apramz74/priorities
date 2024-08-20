@@ -1,27 +1,34 @@
-import React, { useState } from "react";
+import React from "react";
 import { ReactComponent as RefreshIcon } from "./refresh_icon.svg";
 import { ReactComponent as UpdateIcon } from "./update_icon.svg";
 import { ReactComponent as AlertIcon } from "./alert_icon.svg";
 import { ReactComponent as CopyIcon } from "./copy_icon.svg";
 
-const UpdatePreview = ({ selectedTasks }) => {
-  const [update, setUpdate] = useState("");
-
-  const generateUpdate = () => {
-    if (selectedTasks.length < 3) {
-      return "Select at least 3 completed tasks to generate an update";
-    }
-
-    // This is a simple update generation. You might want to make this more sophisticated.
-    const updateText = selectedTasks.map((task) => `- ${task.name}`).join("\n");
-    setUpdate(`This week, I completed the following tasks:\n${updateText}`);
-  };
-
+const UpdatePreview = ({
+  selectedTasks,
+  generatedUpdate,
+  onGenerateUpdate,
+}) => {
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(update);
+    navigator.clipboard.writeText(generatedUpdate);
   };
 
   const showButtons = selectedTasks.length >= 3;
+
+  const renderUpdate = () => {
+    if (!generatedUpdate) return null;
+
+    return (
+      <div className="text-sm">
+        {generatedUpdate.split("\n").map((sentence, index) => (
+          <p key={index} className="flex items-start mb-2">
+            <span className="mr-2">•</span>
+            <span>{sentence.trim()}</span>
+          </p>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="bg-white p-8 rounded-lg shadow">
@@ -33,11 +40,11 @@ const UpdatePreview = ({ selectedTasks }) => {
         {showButtons && (
           <div className="flex items-center">
             <button
-              onClick={generateUpdate}
+              onClick={onGenerateUpdate}
               className="text-xs text-indigo-500 hover:text-indigo-700 mr-6 flex items-center"
             >
               <RefreshIcon className="w-4 h-4 mr-1 fill: blue" />
-              Refresh preview
+              Generate update
             </button>
             <button
               onClick={copyToClipboard}
@@ -61,12 +68,7 @@ const UpdatePreview = ({ selectedTasks }) => {
           </p>
         </div>
       ) : (
-        <textarea
-          value={update}
-          onChange={(e) => setUpdate(e.target.value)}
-          className="w-full h-32 p-2 border rounded"
-          placeholder="Your update will appear here..."
-        />
+        <div className="mt-4 ">{renderUpdate()}</div>
       )}
     </div>
   );

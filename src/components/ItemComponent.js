@@ -87,12 +87,6 @@ const ItemComponent = ({
     return "currentColor"; // Default color for future dates
   };
 
-  console.log("Today:", new Date().toISOString());
-  console.log("Due date:", item.due_date);
-  console.log(
-    "Due date as Date object:",
-    new Date(item.due_date).toISOString()
-  );
   const dueDateColor = getDueDateColor(item.due_date);
 
   const handleContextMenu = (e) => {

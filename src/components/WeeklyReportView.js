@@ -8,6 +8,7 @@ import { ReactComponent as LeftArrowIcon } from "./left_arrow.svg";
 import { ReactComponent as RightArrowIcon } from "./right_arrow.svg";
 import TodoItem from "./TodoItem";
 import UpdatePreview from "./UpdatePreview";
+import model from "./geminiService"; // Import the Gemini model
 
 const WeeklyReportView = () => {
   const getStartOfWeek = (date = new Date()) => {
@@ -32,6 +33,7 @@ const WeeklyReportView = () => {
   const [completedTodos, setCompletedTodos] = useState([]);
   const [selectedTodos, setSelectedTodos] = useState([]);
   const [priorities, setPriorities] = useState([]);
+  const [generatedUpdate, setGeneratedUpdate] = useState("");
 
   const fetchTodosForWeek = useCallback(async () => {
     const dueTodos = await fetchWeeklyTodos(startDate, endDate);
@@ -116,6 +118,35 @@ const WeeklyReportView = () => {
     setSelectedTodos(selectedTodos.filter((t) => t.id !== todo.id));
   };
 
+  const generateUpdate = async (selectedTasks) => {
+    if (selectedTasks.length < 3) {
+      setGeneratedUpdate(
+        "Select at least 3 completed tasks to generate an update"
+      );
+      return;
+    }
+
+    const taskDescriptions = selectedTasks
+      .map(
+        (task) =>
+          `- ${task.name}: ${task.description || "No description provided"}`
+      )
+      .join("\n");
+    const prompt = `Review this context on my completed tasks for the week:\n${taskDescriptions}\n\n For each task, utilize the context provided to generate a descriptive summary. You're a seasoned product manager with 10+ YOE so make assumptions to fill any gaps you may have from the provided context, based on your experience.  No formatting like "**" and no need for a subject line`;
+
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const generatedText = response.text();
+      setGeneratedUpdate(generatedText);
+    } catch (error) {
+      console.error("Error generating update:", error);
+      setGeneratedUpdate(
+        "An error occurred while generating the update. Please try again."
+      );
+    }
+  };
+
   return (
     <div className="flex-grow relative">
       <div className="p-6">
@@ -176,7 +207,11 @@ const WeeklyReportView = () => {
             </div>
           </div>
           <div className="w-3/5 pl-20">
-            <UpdatePreview selectedTasks={selectedTodos} />
+            <UpdatePreview
+              selectedTasks={selectedTodos}
+              generatedUpdate={generatedUpdate}
+              onGenerateUpdate={() => generateUpdate(selectedTodos)}
+            />
           </div>
         </div>
       </div>

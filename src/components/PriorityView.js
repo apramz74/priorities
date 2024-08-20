@@ -16,7 +16,6 @@ const PriorityView = ({
   selectedPriority,
   updatePriorities,
   setView,
-  setSelectedPriority,
   activePrioritiesCount,
 }) => {
   const [todos, setTodos] = useState([]);
@@ -52,7 +51,6 @@ const PriorityView = ({
     const success = await updatePriority(updatedPriority);
     if (success) {
       updatePriorities(updatedPriority);
-      setSelectedPriority(updatedPriority);
     } else {
       console.error("Failed to update priority name");
     }
@@ -63,7 +61,7 @@ const PriorityView = ({
     const success = await updatePriority(updatedPriority);
     if (success) {
       updatePriorities(updatedPriority);
-      setSelectedPriority(updatedPriority);
+      // Update the local state to reflect the change
     } else {
       console.error("Failed to mark priority as complete");
     }
@@ -84,7 +82,7 @@ const PriorityView = ({
     const success = await updatePriority(updatedPriority);
     if (success) {
       updatePriorities(updatedPriority);
-      setSelectedPriority(updatedPriority);
+      // Update the local state to reflect the change
     } else {
       console.error("Failed to reopen priority");
     }
