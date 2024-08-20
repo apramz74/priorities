@@ -2,11 +2,7 @@ import React, { useState, useEffect } from "react";
 import TodoSection from "./TodoSection";
 import { ensureMiscellaneousPriority, fetchMiscTodos } from "../utils/api";
 
-const MiscellaneousView = ({
-  setView,
-  setSelectedPriority,
-  selectedPriority,
-}) => {
+const MiscellaneousView = ({ setView }) => {
   const [todos, setTodos] = useState([]);
   const [priorityId, setPriorityId] = useState(null);
 

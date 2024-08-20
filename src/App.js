@@ -81,7 +81,13 @@ const PriorityManagementTool = () => {
         return (
           <PriorityView
             selectedPriority={activeView.priority}
-            updatePriorities={updatePriorities}
+            updatePriorities={(updatedPriority) => {
+              updatePriorities(updatedPriority);
+              setActiveView((prev) => ({
+                ...prev,
+                priority: updatedPriority,
+              }));
+            }}
             setActiveView={setActiveView}
             activePrioritiesCount={
               priorities.filter(
