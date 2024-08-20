@@ -4,13 +4,13 @@ import "./index.css";
 import HomeView from "./components/HomeView";
 import PriorityView from "./components/PriorityView";
 import MiscellaneousView from "./components/MiscellaneousView";
+import WeeklyReportView from "./components/WeeklyReportView";
 import { fetchPriorities, addPriority as apiAddPriority } from "./utils/api";
 import Navigation from "./components/Navigation";
 
 const PriorityManagementTool = () => {
-  const [view, setView] = useState("home");
+  const [activeView, setActiveView] = useState({ type: "home" });
   const [priorities, setPriorities] = useState([]);
-  const [selectedPriority, setSelectedPriority] = useState(null);
   const [newPriorityName, setNewPriorityName] = useState("");
   const inputRef = useRef(null);
 
@@ -36,8 +36,7 @@ const PriorityManagementTool = () => {
         updatedActivePriorities.splice(slot, 0, newPriority);
         return [...updatedActivePriorities.slice(0, 5), ...completedPriorities];
       });
-      setSelectedPriority(newPriority);
-      setView("priority");
+      setActiveView({ type: "priority", priority: newPriority });
     }
     return newPriority;
   }
@@ -56,33 +55,16 @@ const PriorityManagementTool = () => {
     }
 
     if (updatedPriorities.deleted) {
-      setSelectedPriority(null);
-      setView("home");
+      setActiveView({ type: "home" });
     }
   };
 
-  const handleSelectPriority = (priority) => {
-    setSelectedPriority(priority);
-    setView(priority.id === "misc" ? "miscellaneous" : "priority");
-  };
-
-  const handleGoHome = () => {
-    setSelectedPriority(null);
-    setView("home");
-  };
-
-  const handleSetView = (newView) => {
-    setView(newView);
-    if (newView === "miscellaneous") {
-      const miscPriority = priorities.find((p) => p.name === "Miscellaneous");
-      setSelectedPriority(
-        miscPriority || { id: "misc", name: "Miscellaneous" }
-      );
-    }
+  const handleSelectView = (newView) => {
+    setActiveView(newView);
   };
 
   const renderView = () => {
-    switch (view) {
+    switch (activeView.type) {
       case "home":
         return (
           <HomeView
@@ -91,18 +73,16 @@ const PriorityManagementTool = () => {
             newPriorityName={newPriorityName}
             setNewPriorityName={setNewPriorityName}
             addPriority={addPriority}
-            setSelectedPriority={setSelectedPriority}
-            setView={handleSetView}
+            setActiveView={setActiveView}
             inputRef={inputRef}
           />
         );
       case "priority":
         return (
           <PriorityView
-            selectedPriority={selectedPriority}
+            selectedPriority={activeView.priority}
             updatePriorities={updatePriorities}
-            setView={setView}
-            setSelectedPriority={setSelectedPriority}
+            setActiveView={setActiveView}
             activePrioritiesCount={
               priorities.filter(
                 (p) => !p.completed && p.name !== "Miscellaneous"
@@ -111,13 +91,9 @@ const PriorityManagementTool = () => {
           />
         );
       case "miscellaneous":
-        return (
-          <MiscellaneousView
-            setView={setView}
-            setSelectedPriority={setSelectedPriority}
-            selectedPriority={selectedPriority}
-          />
-        );
+        return <MiscellaneousView setActiveView={setActiveView} />;
+      case "weeklyReport":
+        return <WeeklyReportView />;
       default:
         return null;
     }
@@ -127,12 +103,9 @@ const PriorityManagementTool = () => {
     <div className="min-h-screen bg-[#F6F9FF] flex">
       <Navigation
         priorities={priorities}
-        selectedPriority={selectedPriority}
-        onSelectPriority={handleSelectPriority}
-        onGoHome={handleGoHome}
-        setView={handleSetView}
+        activeView={activeView}
+        onSelectView={handleSelectView}
         addPriority={addPriority}
-        setSelectedPriority={setSelectedPriority}
         updatePriorities={updatePriorities}
       />
       <div className="flex-grow overflow-auto">
