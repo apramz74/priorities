@@ -1,16 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
 import { ReactComponent as RefreshIcon } from "./refresh_icon.svg";
 import { ReactComponent as UpdateIcon } from "./update_icon.svg";
 import { ReactComponent as AlertIcon } from "./alert_icon.svg";
 import { ReactComponent as CopyIcon } from "./copy_icon.svg";
+import { ReactComponent as ReadyStateIcon } from "./ready_state_icon.svg";
 
 const UpdatePreview = ({
   selectedTasks,
   generatedUpdate,
   onGenerateUpdate,
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(generatedUpdate);
+  };
+
+  const handleGenerateUpdate = async () => {
+    setIsLoading(true);
+    await onGenerateUpdate();
+    setIsLoading(false);
   };
 
   const showButtons = selectedTasks.length >= 3;
@@ -20,12 +29,22 @@ const UpdatePreview = ({
 
     return (
       <div className="text-sm">
-        {generatedUpdate.split("\n").map((sentence, index) => (
-          <p key={index} className="flex items-start mb-2">
-            <span className="mr-2">•</span>
-            <span>{sentence.trim()}</span>
-          </p>
-        ))}
+        {generatedUpdate.split("\n").map((sentence, index) => {
+          const boldPattern = /\*\*(.*?)\*\*/g;
+          const parts = sentence.split(boldPattern);
+
+          return (
+            <li key={index} className="flex items-start mb-2">
+              {parts.map((part, partIndex) =>
+                partIndex % 2 === 0 ? (
+                  <span key={partIndex}>{part}</span>
+                ) : (
+                  <strong key={partIndex}>{part}</strong>
+                )
+              )}
+            </li>
+          );
+        })}
       </div>
     );
   };
@@ -40,11 +59,16 @@ const UpdatePreview = ({
         {showButtons && (
           <div className="flex items-center">
             <button
-              onClick={onGenerateUpdate}
+              onClick={handleGenerateUpdate}
               className="text-xs text-indigo-500 hover:text-indigo-700 mr-6 flex items-center"
+              disabled={isLoading}
             >
-              <RefreshIcon className="w-4 h-4 mr-1 fill: blue" />
-              Generate update
+              <RefreshIcon
+                className={`w-4 h-4 mr-1 fill ${
+                  isLoading ? "animate-spin" : ""
+                }`}
+              />
+              {isLoading ? "Generating..." : "Generate update"}
             </button>
             <button
               onClick={copyToClipboard}
@@ -67,8 +91,13 @@ const UpdatePreview = ({
             Select at least 3 completed tasks to generate an update
           </p>
         </div>
+      ) : !generatedUpdate ? (
+        <div className="flex flex-col items-center justify-center py-8">
+          <ReadyStateIcon className="w-32 h-32 " />
+          <p className="text-sm text-gray-600">Ready to create your update</p>
+        </div>
       ) : (
-        <div className="mt-4 ">{renderUpdate()}</div>
+        <div className="mt-4">{renderUpdate()}</div>
       )}
     </div>
   );
