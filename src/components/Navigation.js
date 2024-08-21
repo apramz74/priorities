@@ -223,7 +223,7 @@ const Navigation = ({
                     : "text-gray-400 hover:bg-gray-100"
                 }`}
               >
-                <CompletedCheckmarkIcon className="w-5 h-5 mr-7 text-gray-400" />
+                <CompletedCheckmarkIcon className="w-5 h-5 mr-7 text-gray-400 flex-shrink-0" />
                 <span className="font-medium truncate line-through">
                   {priority.name}
                 </span>
