@@ -132,7 +132,7 @@ const WeeklyReportView = () => {
           `- ${task.name}: ${task.description || "No description provided"}`
       )
       .join("\n");
-    const prompt = `Review this context on my completed tasks for the week:\n${taskDescriptions}\n\n For each task, utilize the context provided to generate a descriptive summary. You're a seasoned product manager with 10+ YOE so make assumptions to fill any gaps you may have from the provided context, based on your experience.  No formatting like "**" and no need for a subject line`;
+    const prompt = `Review this context on my completed tasks for the week:\n${taskDescriptions}\n\n For each task, utilize the context provided to generate a descriptive summary. You're a seasoned product manager with 10+ YOE so make assumptions to fill any gaps you may have from the provided context, based on your experience. Write from the 1st person perspective. Each item should start with a bolded 4 word max summary and then a more detailed description of what I did. Also, the whole thing should start with a header "What I did this week". No formatting like "**" and no need for a subject line`;
 
     try {
       const result = await model.generateContent(prompt);
