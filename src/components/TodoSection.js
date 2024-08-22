@@ -67,6 +67,10 @@ const TodoSection = ({ priorityId, todos, setTodos }) => {
     ? todos
     : todos.filter((todo) => !todo.completed);
 
+  const sortedTodos = filteredTodos.sort(
+    (a, b) => new Date(a.due_date) - new Date(b.due_date)
+  );
+
   const todoFields = [
     {
       name: "name",
@@ -113,9 +117,9 @@ const TodoSection = ({ priorityId, todos, setTodos }) => {
           </div>
         </div>
       </div>
-      {filteredTodos.length > 0 ? (
+      {sortedTodos.length > 0 ? (
         <div className="space-y-2">
-          {filteredTodos.map((todo) => (
+          {sortedTodos.map((todo) => (
             <ItemComponent
               key={todo.id}
               item={todo}

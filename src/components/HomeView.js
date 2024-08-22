@@ -3,6 +3,8 @@ import { fetchPrioritySummary } from "../utils/api";
 
 const HomeView = ({ priorities, setSelectedPriority, setView }) => {
   const [summaries, setSummaries] = useState([]);
+  const [timeLeft, setTimeLeft] = useState("");
+  const [progressPercentage, setProgressPercentage] = useState(0);
 
   useEffect(() => {
     const loadSummaries = async () => {
@@ -10,44 +12,78 @@ const HomeView = ({ priorities, setSelectedPriority, setView }) => {
       setSummaries(summaryData);
     };
     loadSummaries();
+
+    const updateTime = () => {
+      const now = new Date();
+      const startTime = new Date(now).setHours(9, 0, 0, 0);
+      const endTime = new Date(now).setHours(17, 0, 0, 0);
+
+      if (now < startTime) {
+        setTimeLeft("Workday hasn't started yet");
+        setProgressPercentage(0);
+      } else if (now > endTime) {
+        setTimeLeft("Workday is over");
+        setProgressPercentage(100);
+      } else {
+        const totalMinutes = (endTime - startTime) / 60000;
+        const elapsedMinutes = (now - startTime) / 60000;
+        const remainingMinutes = totalMinutes - elapsedMinutes;
+
+        const hours = Math.floor(remainingMinutes / 60);
+        const minutes = Math.floor(remainingMinutes % 60);
+
+        setTimeLeft(`${hours}h ${minutes}m  left in the workday`);
+        setProgressPercentage((elapsedMinutes / totalMinutes) * 100);
+      }
+    };
+
+    updateTime();
+    const timer = setInterval(updateTime, 60000); // Update every minute
+
+    return () => clearInterval(timer);
   }, []);
 
+  const totalDueToday = summaries.reduce(
+    (sum, s) => sum + (s.dueTodayCount && !s.completed ? 1 : 0), // Count only if not completed
+    0
+  );
+  const totalOverdue = summaries.reduce(
+    (sum, s) => sum + (s.overdueCount || 0),
+    0
+  );
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold">Priority Summary</h2>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {priorities.map((priority) => {
-          const summary =
-            summaries.find((s) => s.priorityId === priority.id) || {};
-          return (
+    <div className="flex-grow relative">
+      <div className="p-6">
+        <h1 className="text-3xl font-black mb-6">Home</h1>
+
+        <div className="my-8">
+          <h2 className="text-3xl font-medium mb-2">
+            <span className="text-indigo-deep font-bold">
+              {timeLeft.split(" ")[0]} {timeLeft.split(" ")[1]}
+            </span>
+            <span className="text-base">
+              {timeLeft.split(" ").slice(2).join(" ")}
+            </span>
+          </h2>
+          <div className="w-full bg-white border-2 border-indigo-deep rounded-lg h-10 mb-2 overflow-hidden">
             <div
-              key={priority.id}
-              className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => {
-                setSelectedPriority(priority);
-                setView("priority");
-              }}
+              className="bg-indigo-600 h-10 rounded-l-md flex items-center justify-center"
+              style={{ width: `${progressPercentage}%`, opacity: 0.8 }}
             >
-              <h3 className="text-lg font-semibold mb-2">{priority.name}</h3>
-              <div className="flex justify-between">
-                <div className="text-red-500">
-                  <span className="font-bold text-2xl">
-                    {summary.overdueCount || 0}
-                  </span>
-                  <span className="text-sm ml-1">overdue</span>
-                </div>
-                <div className="text-orange-500">
-                  <span className="font-bold text-2xl">
-                    {summary.dueTodayCount || 0}
-                  </span>
-                  <span className="text-sm ml-1">due today</span>
-                </div>
-              </div>
+              <span className="text-white text-xs font-medium">
+                {Math.round(progressPercentage)}% complete
+              </span>
             </div>
-          );
-        })}
+          </div>
+          <h2 className="text-xl font-medium my-3">
+            You have{" "}
+            <span className="text-indigo-deep font-bold">{totalDueToday}</span>{" "}
+            todos still due today and{" "}
+            <span className="text-red-500 font-bold">{totalOverdue}</span> that
+            are overdue
+          </h2>
+        </div>
       </div>
     </div>
   );
