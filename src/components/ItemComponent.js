@@ -131,14 +131,14 @@ const ItemComponent = ({
           onUpdate={(value) =>
             onUpdate(item.id, isDependency ? "title" : "name", value)
           }
-          className="text-sm font-medium truncate"
+          className="text-sm font-medium truncate flex-shrink-0"
         />
         <EditableField
           value={isDependency ? item.person : item.notes}
           onUpdate={(value) =>
             onUpdate(item.id, isDependency ? "person" : "notes", value)
           }
-          className="text-xs text-gray-500 truncate"
+          className="text-xs text-gray-500 truncate flex-shrink-0"
         />
       </div>
       <div

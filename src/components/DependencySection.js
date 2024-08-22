@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   addDependency,
   updateDependency,
@@ -11,25 +11,9 @@ import { ReactComponent as PlusIcon } from "./plus_icon.svg";
 import StandardModal from "./StandardModal";
 import { ReactComponent as EmptyStateIcon } from "./empty_state.svg";
 
-const DependencySection = ({ priorityId }) => {
-  const [dependencies, setDependencies] = useState([]);
-  const [showCompleted, setShowCompleted] = useState(false);
+const DependencySection = ({ priorityId, dependencies, setDependencies }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const loadDependencies = React.useCallback(async () => {
-    const fetchedDependencies = await fetchDependencies(
-      priorityId,
-      showCompleted
-    );
-    const sortedDependencies = fetchedDependencies.sort(
-      (a, b) => new Date(a.due_date) - new Date(b.due_date)
-    );
-    setDependencies(sortedDependencies);
-  }, [priorityId, showCompleted]);
-
-  useEffect(() => {
-    loadDependencies();
-  }, [loadDependencies]);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const handleAddDependency = async (data) => {
     const newDependency = await addDependency({
@@ -37,31 +21,8 @@ const DependencySection = ({ priorityId }) => {
       priority_id: priorityId,
     });
     if (newDependency) {
-      setDependencies((prevDependencies) => {
-        const updatedDependencies = [...prevDependencies, newDependency];
-        return updatedDependencies.sort(
-          (a, b) => new Date(a.due_date) - new Date(b.due_date)
-        );
-      });
+      setDependencies([...dependencies, newDependency]);
       setIsModalOpen(false);
-    }
-  };
-
-  const handleUpdateDependency = async (id, field, value) => {
-    const updatedDependency = {
-      ...dependencies.find((d) => d.id === id),
-      [field]: value,
-    };
-    const result = await updateDependency(updatedDependency);
-    if (result) {
-      setDependencies((prevDependencies) => {
-        const updatedDependencies = prevDependencies.map((d) =>
-          d.id === result.id ? result : d
-        );
-        return updatedDependencies.sort(
-          (a, b) => new Date(a.due_date) - new Date(b.due_date)
-        );
-      });
     }
   };
 
@@ -86,20 +47,43 @@ const DependencySection = ({ priorityId }) => {
     }
   };
 
+  const handleUpdateDependency = async (id, field, value) => {
+    const updatedDependency = {
+      ...dependencies.find((d) => d.id === id),
+      [field]: value,
+    };
+    const result = await updateDependency(updatedDependency);
+    if (result) {
+      setDependencies(
+        dependencies.map((d) => (d.id === result.id ? result : d))
+      );
+    }
+  };
+
   const handleToggleDeleted = async (id) => {
     const success = await toggleDeleted("dependencies", id, true);
     if (success) {
-      await loadDependencies();
+      const updatedDependencies = await fetchDependencies(priorityId);
+      setDependencies(updatedDependencies);
     }
   };
 
   const handleToggleShowCompleted = async () => {
     setShowCompleted((prev) => !prev);
+    const updatedDependencies = await fetchDependencies(
+      priorityId,
+      !showCompleted
+    );
+    setDependencies(updatedDependencies);
   };
 
-  useEffect(() => {
-    loadDependencies();
-  }, [showCompleted, loadDependencies]);
+  const filteredDependencies = showCompleted
+    ? dependencies
+    : dependencies.filter((dependency) => !dependency.completed);
+
+  const sortedDependencies = filteredDependencies.sort(
+    (a, b) => new Date(a.due_date) - new Date(b.due_date)
+  );
 
   const dependencyFields = [
     {
@@ -147,9 +131,9 @@ const DependencySection = ({ priorityId }) => {
           </div>
         </div>
       </div>
-      {dependencies.length > 0 ? (
+      {sortedDependencies.length > 0 ? (
         <div className="space-y-2">
-          {dependencies.map((dependency) => (
+          {sortedDependencies.map((dependency) => (
             <ItemComponent
               key={dependency.id}
               item={dependency}
