@@ -148,7 +148,9 @@ const ItemComponent = ({
         <CalendarIcon className="w-4 h-4 absolute left-0" />
         <EditableField
           value={item.due_date}
-          onUpdate={(value) => onUpdate(item.id, "due_date", value)}
+          onUpdate={(value) => {
+            onUpdate(item.id, "due_date", value);
+          }}
           type="date"
           className="text-xs w-full pl-6"
         />

@@ -293,17 +293,31 @@ export async function fetchPrioritySummary() {
   const priorities = await fetchPriorities();
   const summaries = [];
 
+  // Set today's date to midnight
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set time to midnight
+
   for (const priority of priorities) {
-    const todos = await fetchTodos(priority.id, true);
-    const today = new Date().toISOString().split("T")[0];
+    const todos = await fetchTodos(priority.id, true); // Fetch all todos for the priority
 
-    const overdueCount = todos.filter(
-      (todo) => !todo.completed && new Date(todo.due_date) < new Date(today)
-    ).length;
+    const overdueTodos = todos.filter((todo) => {
+      const dueDate = new Date(todo.due_date + "T00:00:00");
+      if (!todo.completed && dueDate < today) {
+        return true; // Include this todo in the overdue list
+      }
+      return false; // Exclude this todo
+    });
 
-    const dueTodayCount = todos.filter(
-      (todo) => !todo.completed && todo.due_date === today
-    ).length;
+    const dueTodayTodos = todos.filter((todo) => {
+      const dueDate = new Date(todo.due_date + "T00:00:00");
+      if (!todo.completed && dueDate.toDateString() === today.toDateString()) {
+        return true; // Include this todo in the due today list
+      }
+      return false; // Exclude this todo
+    });
+
+    const overdueCount = overdueTodos.length;
+    const dueTodayCount = dueTodayTodos.length;
 
     summaries.push({
       priorityId: priority.id,
@@ -317,6 +331,10 @@ export async function fetchPrioritySummary() {
 }
 
 export async function fetchWeeklyTodos(startDate, endDate) {
+  // Adjust endDate to include the entire day
+  const adjustedEndDate = new Date(endDate);
+  adjustedEndDate.setDate(adjustedEndDate.getDate() + 1);
+
   const { data, error } = await supabase
     .from("todos")
     .select(
@@ -330,7 +348,11 @@ export async function fetchWeeklyTodos(startDate, endDate) {
     `
     )
     .or(
-      `and(due_date.gte.${startDate},due_date.lte.${endDate}),and(completed_at.gte.${startDate},completed_at.lte.${endDate})`
+      `and(due_date.gte.${startDate},due_date.lt.${
+        adjustedEndDate.toISOString().split("T")[0]
+      }),and(completed_at.gte.${startDate},completed_at.lt.${
+        adjustedEndDate.toISOString().split("T")[0]
+      })`
     )
     .is("deleted", false)
     .order("due_date", { ascending: true });
@@ -347,6 +369,10 @@ export async function fetchWeeklyTodos(startDate, endDate) {
 }
 
 export async function fetchCompletedTodos(startDate, endDate) {
+  // Adjust endDate to include the entire day
+  const adjustedEndDate = new Date(endDate);
+  adjustedEndDate.setDate(adjustedEndDate.getDate() + 1);
+
   const { data, error } = await supabase
     .from("todos")
     .select(
@@ -358,7 +384,7 @@ export async function fetchCompletedTodos(startDate, endDate) {
     `
     )
     .gte("completed_at", startDate)
-    .lte("completed_at", endDate)
+    .lt("completed_at", adjustedEndDate.toISOString().split("T")[0])
     .eq("completed", true)
     .is("deleted", false)
     .order("completed_at", { ascending: false });
