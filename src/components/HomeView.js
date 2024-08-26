@@ -19,10 +19,10 @@ const HomeView = ({ priorities, setSelectedPriority, setView }) => {
       const endTime = new Date(now).setHours(17, 0, 0, 0);
 
       if (now < startTime) {
-        setTimeLeft("Workday hasn't started yet");
+        setTimeLeft("Workday  hasn't started yet");
         setProgressPercentage(0);
       } else if (now > endTime) {
-        setTimeLeft("Workday is over");
+        setTimeLeft("Workday  is over");
         setProgressPercentage(100);
       } else {
         const totalMinutes = (endTime - startTime) / 60000;
@@ -44,7 +44,7 @@ const HomeView = ({ priorities, setSelectedPriority, setView }) => {
   }, []);
 
   const totalDueToday = summaries.reduce(
-    (sum, s) => sum + (s.dueTodayCount && !s.completed ? 1 : 0), // Count only if not completed
+    (sum, s) => sum + s.dueTodayCount, // Directly use s.dueTodayCount
     0
   );
   const totalOverdue = summaries.reduce(
@@ -79,9 +79,9 @@ const HomeView = ({ priorities, setSelectedPriority, setView }) => {
           <h2 className="text-xl font-medium my-3">
             You have{" "}
             <span className="text-indigo-deep font-bold">{totalDueToday}</span>{" "}
-            todos still due today and{" "}
-            <span className="text-red-500 font-bold">{totalOverdue}</span> that
-            are overdue
+            {totalDueToday === 1 ? "todo" : "todos"} still due today and{" "}
+            <span className="text-red-500 font-bold">{totalOverdue}</span>{" "}
+            {totalOverdue === 1 ? "that is" : "that are"} overdue
           </h2>
         </div>
       </div>
