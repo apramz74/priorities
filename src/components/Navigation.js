@@ -6,6 +6,7 @@ import StandardModal from "./StandardModal";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { ReactComponent as DragHandleIcon } from "./drag_handle_icon.svg";
 import { ReactComponent as WeeklyReportIcon } from "./weekly_report_icon.svg";
+import { ReactComponent as DailyPlanIcon } from "./calendar_icon.svg";
 
 const StrictModeDroppable = ({ children, ...props }) => {
   const [enabled, setEnabled] = useState(false);
@@ -99,7 +100,7 @@ const Navigation = ({
     <nav className="w-72 bg-white border-r border-gray-200 h-screen p-6 flex flex-col">
       <div className="mb-8">
         <button
-          onClick={() => onSelectView({ type: "home" })}
+          onClick={() => onSelectView({ type: "dailyPlan" })}
           className="text-[#0000D1] font-extrabold text-xl flex items-center"
         >
           <img src={logo} alt="Prioritiez Logo" className="h-10 w-10 mr-2" />
@@ -109,6 +110,17 @@ const Navigation = ({
 
       <div className="h-[calc(100vh-200px)] overflow-y-auto">
         <h3 className="text-sm font-semibold text-gray-600 mb-2">PLANNING</h3>
+        <button
+          onClick={() => onSelectView({ type: "dailyPlan" })}
+          className={`w-full text-left py-2 px-4 rounded flex items-center text-sm ${
+            activeView.type === "dailyPlan"
+              ? "bg-indigo-100 text-indigo-700"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+        >
+          <DailyPlanIcon className="w-5 h-5 mr-7" />
+          <span className="font-medium">Daily Plan</span>
+        </button>
         <button
           onClick={() => onSelectView({ type: "weeklyReport" })}
           className={`w-full text-left py-2 px-4 rounded flex items-center text-sm ${
