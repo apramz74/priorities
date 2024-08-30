@@ -28,7 +28,12 @@ const WeeklyReportView = ({ priorities }) => {
 
   const fetchTodosForWeek = useCallback(async () => {
     const todos = await fetchWeeklyTodos(startDate, endDate);
-    setWeeklyTodos(todos);
+    // Filter out todos completed before the start of the current week
+    const filteredTodos = todos.filter(
+      (todo) =>
+        !todo.completed || new Date(todo.completed_at) >= new Date(startDate)
+    );
+    setWeeklyTodos(filteredTodos);
   }, [startDate, endDate]);
 
   useEffect(() => {
@@ -152,6 +157,7 @@ const WeeklyReportView = ({ priorities }) => {
                       {todos.map((todo) => (
                         <TodoItem
                           key={todo.id}
+                          completed_at={todo.completed_at}
                           todo={todo}
                           isSelected={selectedTodos.some(
                             (t) => t.id === todo.id
