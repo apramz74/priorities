@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { fetchPrioritySummary } from "../utils/api";
 import DailyCalendar from "./DailyCalendar";
 
@@ -6,6 +6,11 @@ const HomeView = ({ priorities, setSelectedPriority, setView }) => {
   const [summaries, setSummaries] = useState([]);
   const [timeLeft, setTimeLeft] = useState("");
   const [progressPercentage, setProgressPercentage] = useState(0);
+
+  const handleTodoUpdate = useCallback(async () => {
+    const summaryData = await fetchPrioritySummary();
+    setSummaries(summaryData);
+  }, []);
 
   useEffect(() => {
     const loadSummaries = async () => {
@@ -86,7 +91,7 @@ const HomeView = ({ priorities, setSelectedPriority, setView }) => {
 
       {/* Wrap the DailyCalendar in a div with consistent styling */}
       <div className="mt-8">
-        <DailyCalendar />
+        <DailyCalendar onTodoUpdate={handleTodoUpdate} />
       </div>
     </div>
   );
