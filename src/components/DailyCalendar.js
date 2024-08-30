@@ -23,24 +23,17 @@ const DailyCalendar = () => {
 
   useEffect(() => {
     loadTodosForToday();
-  });
+  }); // Empty dependency array ensures this runs only once on mount
 
   const loadTodosForToday = async () => {
     const todayTodos = await fetchTodosForToday();
-
     const formattedTodos = formatTodosForCalendar(todayTodos);
     setTodos(formattedTodos);
   };
 
   const formatTodosForCalendar = (todos) => {
     return todos.map((todo) => {
-      let start;
-      if (todo.start_time) {
-        start = new Date(todo.due_date + "T" + todo.start_time);
-      } else {
-        start = new Date(todo.due_date);
-        start.setHours(9, 0, 0, 0); // Default to 9:00 AM if no start_time
-      }
+      const start = new Date(`${todo.due_date}T${todo.start_time}`);
       const durationInMinutes = todo.duration || 30;
       const end = new Date(start.getTime() + durationInMinutes * 60000);
 
@@ -50,6 +43,7 @@ const DailyCalendar = () => {
         start: start,
         end: end,
         resource: todo,
+        duration: durationInMinutes,
       };
     });
   };
