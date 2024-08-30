@@ -38,7 +38,6 @@ const WeeklyReportView = () => {
   const fetchTodosForWeek = useCallback(async () => {
     const dueTodos = await fetchWeeklyTodos(startDate, endDate);
     const completedTodos = await fetchCompletedTodos(startDate, endDate);
-    console.log(completedTodos);
 
     // Combine and deduplicate todos
     const allTodos = [...dueTodos, ...completedTodos].reduce((acc, todo) => {
