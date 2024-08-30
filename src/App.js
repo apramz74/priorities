@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import "./index.css";
-import HomeView from "./components/HomeView";
+import DailyPlanView from "./components/DailyPlanView";
 import PriorityView from "./components/PriorityView";
 import MiscellaneousView from "./components/MiscellaneousView";
 import WeeklyReportView from "./components/WeeklyReportView";
@@ -15,7 +15,7 @@ import Navigation from "./components/Navigation";
 import DailyCalendar from "./components/DailyCalendar";
 
 const PriorityManagementTool = () => {
-  const [activeView, setActiveView] = useState({ type: "home" });
+  const [activeView, setActiveView] = useState({ type: "dailyPlan" });
   const [priorities, setPriorities] = useState([]);
   const [newPriorityName, setNewPriorityName] = useState("");
   const inputRef = useRef(null);
@@ -63,7 +63,7 @@ const PriorityManagementTool = () => {
     }
 
     if (updatedPriorities.deleted) {
-      setActiveView({ type: "home" });
+      setActiveView({ type: "dailyPlan" });
     }
   };
 
@@ -73,9 +73,9 @@ const PriorityManagementTool = () => {
 
   const renderView = () => {
     switch (activeView.type) {
-      case "home":
+      case "dailyPlan":
         return (
-          <HomeView
+          <DailyPlanView
             priorities={priorities}
             updatePriorities={updatePriorities}
             newPriorityName={newPriorityName}
@@ -111,7 +111,7 @@ const PriorityManagementTool = () => {
       case "dailyCalendar":
         return <DailyCalendar />;
       default:
-        return null;
+        return <DailyPlanView priorities={priorities} />;
     }
   };
 
