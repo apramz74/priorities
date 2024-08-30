@@ -367,7 +367,8 @@ export async function fetchTodosForToday() {
     return [];
   }
 
-  return data || [];
+  // Ensure unique start times before returning the data
+  return await ensureUniqueStartTimes(data || []);
 }
 
 export async function updateTodoStartTime(id, start_time) {
@@ -388,4 +389,46 @@ export async function updateTodoDuration(id, duration) {
 
   if (error) console.error("Error updating todo duration:", error);
   return !error;
+}
+
+// Add this new function
+export async function ensureUniqueStartTimes(todos) {
+  const sortedTodos = todos.sort((a, b) => {
+    if (a.start_time && b.start_time) {
+      return a.start_time.localeCompare(b.start_time);
+    }
+    return a.start_time ? -1 : 1;
+  });
+
+  let lastEndTime = null;
+  const updatedTodos = [];
+
+  for (const todo of sortedTodos) {
+    let needsUpdate = false;
+
+    if (!todo.start_time) {
+      // Only set start time if it's not already set
+      todo.start_time = lastEndTime || "09:00";
+      needsUpdate = true;
+    }
+
+    const duration = todo.duration || 30; // Use existing duration or default to 30
+    const [hours, minutes] = todo.start_time.split(":").map(Number);
+    const endTime = new Date(2000, 0, 1, hours, minutes + duration);
+    lastEndTime = `${String(endTime.getHours()).padStart(2, "0")}:${String(
+      endTime.getMinutes()
+    ).padStart(2, "0")}`;
+
+    updatedTodos.push(todo);
+
+    // Only update in the database if changes were made
+    if (needsUpdate) {
+      await updateTodoStartTime(todo.id, todo.start_time);
+    }
+    if (!todo.duration) {
+      await updateTodoDuration(todo.id, duration);
+    }
+  }
+
+  return updatedTodos;
 }
