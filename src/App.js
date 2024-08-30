@@ -5,7 +5,12 @@ import HomeView from "./components/HomeView";
 import PriorityView from "./components/PriorityView";
 import MiscellaneousView from "./components/MiscellaneousView";
 import WeeklyReportView from "./components/WeeklyReportView";
-import { fetchPriorities, addPriority as apiAddPriority } from "./utils/api";
+import {
+  fetchPriorities,
+  addPriority as apiAddPriority,
+  updatePrioritiesOrder,
+  updatePriority,
+} from "./utils/api";
 import Navigation from "./components/Navigation";
 import DailyCalendar from "./components/DailyCalendar";
 
@@ -42,10 +47,11 @@ const PriorityManagementTool = () => {
     return newPriority;
   }
 
-  const updatePriorities = (updatedPriorities) => {
+  const updatePriorities = async (updatedPriorities) => {
     console.log("Updating priorities:", updatedPriorities);
     if (Array.isArray(updatedPriorities)) {
       setPriorities(updatedPriorities.filter((p) => !p.deleted));
+      await updatePrioritiesOrder(updatedPriorities);
     } else {
       setPriorities((prevPriorities) => {
         const updated = prevPriorities.map((p) =>
@@ -53,6 +59,7 @@ const PriorityManagementTool = () => {
         );
         return updated.filter((p) => !p.deleted);
       });
+      await updatePriority(updatedPriorities);
     }
 
     if (updatedPriorities.deleted) {
@@ -100,7 +107,7 @@ const PriorityManagementTool = () => {
       case "miscellaneous":
         return <MiscellaneousView setActiveView={setActiveView} />;
       case "weeklyReport":
-        return <WeeklyReportView />;
+        return <WeeklyReportView priorities={priorities} />;
       case "dailyCalendar":
         return <DailyCalendar />;
       default:
