@@ -334,9 +334,11 @@ export async function fetchWeeklyTodos(startDate, endDate) {
   const { data, error } = await supabase
     .from("todos")
     .select("*, priority:priorities(name)")
-    .gte("due_date", startDate)
-    .lte("due_date", endDate)
-    .order("completed", { ascending: false }); // Sort completed todos first
+    .or(
+      `and(due_date.gte.${startDate},due_date.lte.${endDate}),and(completed.eq.true,completed_at.gte.${startDate},completed_at.lte.${endDate})`
+    )
+    .order("completed", { ascending: false })
+    .order("completed_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching weekly todos:", error);
@@ -344,40 +346,6 @@ export async function fetchWeeklyTodos(startDate, endDate) {
   }
 
   return data;
-}
-
-export async function fetchCompletedTodos(startDate, endDate) {
-  // Adjust endDate to include the entire day
-  const adjustedEndDate = new Date(endDate);
-  adjustedEndDate.setDate(adjustedEndDate.getDate() + 1);
-
-  const { data, error } = await supabase
-    .from("todos")
-    .select(
-      `
-      id,
-      name,
-      description,
-      completed_at,
-      priority:priorities(id, name)
-    `
-    )
-    .gte("completed_at", startDate)
-    .lt("completed_at", adjustedEndDate.toISOString().split("T")[0])
-    .eq("completed", true)
-    .is("deleted", false)
-    .order("completed_at", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching completed todos:", error);
-    return [];
-  }
-
-  return data.map((todo) => ({
-    ...todo,
-    priority_name: todo.priority.name,
-    priority_id: todo.priority.id,
-  }));
 }
 
 export async function fetchTodosForToday() {

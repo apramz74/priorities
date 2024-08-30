@@ -5,6 +5,16 @@ import { ReactComponent as PendingIcon } from "./pending_icon.svg";
 const TodoItem = ({ todo, isSelected, onSelect, onDeselect }) => {
   const isCompleted = !!todo.completed_at;
 
+  // Add this function to format the date
+  const formatCompletedDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  const fullTodoInfo = isCompleted
+    ? `${todo.name} (Completed: ${formatCompletedDate(todo.completed_at)})`
+    : todo.name;
+
   return (
     <div
       className={`flex items-center justify-between w-full p-1 pr-2 pl-2 rounded-md ${
@@ -17,7 +27,20 @@ const TodoItem = ({ todo, isSelected, onSelect, onDeselect }) => {
         ) : (
           <PendingIcon className="w-4 h-4 text-yellow-500 flex-shrink-0 mr-2" />
         )}
-        <span className="truncate text-xs mr-2 flex-grow">{todo.name}</span>
+        <span
+          className="truncate text-xs mr-2 flex-grow group relative"
+          title={fullTodoInfo}
+        >
+          {todo.name}
+          {isCompleted && (
+            <span className="ml-1 text-gray-400">
+              ({formatCompletedDate(todo.completed_at)})
+            </span>
+          )}
+          <span className="invisible group-hover:visible absolute left-0 top-full mt-1 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 whitespace-nowrap">
+            {fullTodoInfo}
+          </span>
+        </span>
       </div>
       <div className="flex-shrink-0">
         {isSelected ? (
