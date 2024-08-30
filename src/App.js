@@ -7,6 +7,7 @@ import MiscellaneousView from "./components/MiscellaneousView";
 import WeeklyReportView from "./components/WeeklyReportView";
 import { fetchPriorities, addPriority as apiAddPriority } from "./utils/api";
 import Navigation from "./components/Navigation";
+import DailyCalendar from "./components/DailyCalendar";
 
 const PriorityManagementTool = () => {
   const [activeView, setActiveView] = useState({ type: "home" });
@@ -100,6 +101,8 @@ const PriorityManagementTool = () => {
         return <MiscellaneousView setActiveView={setActiveView} />;
       case "weeklyReport":
         return <WeeklyReportView />;
+      case "dailyCalendar":
+        return <DailyCalendar />;
       default:
         return null;
     }

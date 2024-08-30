@@ -399,3 +399,45 @@ export async function fetchCompletedTodos(startDate, endDate) {
     priority_name: todo.priorities.name,
   }));
 }
+
+export async function fetchTodosForToday() {
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}-${String(now.getDate()).padStart(2, "0")}`;
+
+  const { data, error } = await supabase
+    .from("todos")
+    .select("*")
+    .eq("due_date", today)
+    .is("deleted", false)
+    .order("start_time", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching today's todos:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+export async function updateTodoStartTime(id, start_time) {
+  const { error } = await supabase
+    .from("todos")
+    .update({ start_time: start_time })
+    .eq("id", id);
+
+  if (error) console.error("Error updating todo start time:", error);
+  return !error;
+}
+
+export async function updateTodoDuration(id, duration) {
+  const { error } = await supabase
+    .from("todos")
+    .update({ duration: duration })
+    .eq("id", id);
+
+  if (error) console.error("Error updating todo duration:", error);
+  return !error;
+}
