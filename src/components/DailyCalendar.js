@@ -17,7 +17,7 @@ const localizer = momentLocalizer(moment);
 // Create a DnD Calendar
 const DnDCalendar = withDragAndDrop(Calendar);
 
-const DailyCalendar = () => {
+const DailyCalendar = ({ onTodoUpdate }) => {
   const [todos, setTodos] = useState([]);
   const [scrolledDate, setScrolledDate] = useState(new Date());
 
@@ -55,6 +55,7 @@ const DailyCalendar = () => {
     };
     await toggleComplete("todos", updatedTodo.id, updatedTodo.completed);
     loadTodosForToday();
+    onTodoUpdate(); // Call the callback function
   };
 
   const handleEventResize = async ({ event, start, end }) => {
