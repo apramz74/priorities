@@ -90,7 +90,6 @@ const DailyCalendar = ({
     <div className="daily-calendar w-full" style={{ height: "800px" }}>
       <h2 className="text-xl font-semibold mb-2">Your day</h2>
       <h2 className="text-md mt-1">
-        You have{" "}
         <span className="text-indigo-deep font-bold">{totalDueToday}</span>{" "}
         {totalDueToday === 1 ? "todo" : "todos"} still due today and{" "}
         <span className="text-red-500 font-bold">{totalOverdue}</span>{" "}

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  fetchTodosForToday,
   updateTodoSelectedForToday,
   assignStartTimesAndDurations,
 } from "../utils/api";
@@ -11,21 +10,18 @@ const TodoSelectionModal = ({
   selectedTodos,
   setSelectedTodos,
   priorities, // Add this prop
+  allTodos,
+  onTodoUpdate,
 }) => {
   const [todos, setTodos] = useState([]);
   const [activeTab, setActiveTab] = useState("today");
 
   useEffect(() => {
     if (isOpen) {
-      fetchTodosForToday().then((fetchedTodos) => {
-        // fetchedTodos now contains only incomplete and non-deleted todos
-        setTodos(fetchedTodos);
-        setSelectedTodos(
-          fetchedTodos.filter((todo) => todo.selected_for_today)
-        );
-      });
+      setTodos(allTodos);
+      setSelectedTodos(allTodos.filter((todo) => todo.selected_for_today));
     }
-  }, [isOpen, setSelectedTodos]);
+  }, [isOpen, allTodos, setSelectedTodos]);
 
   const getDaysOverdue = (dueDate) => {
     const today = new Date();
@@ -49,6 +45,7 @@ const TodoSelectionModal = ({
       setTodos((prev) =>
         prev.map((t) => (t.id === updatedTodo.id ? updatedTodo : t))
       );
+      onTodoUpdate(); // Trigger update in parent component
     }
   };
 

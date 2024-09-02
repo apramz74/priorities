@@ -1,18 +1,21 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  fetchPrioritySummary,
   fetchTodosForToday,
   assignStartTimesAndDurations,
+  calculateTodoCounts,
 } from "../utils/api";
 import DailyCalendar from "./DailyCalendar";
 import TodoSelectionModal from "./TodoSelectionModal";
 
 const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
-  const [summaries, setSummaries] = useState([]);
   const [timeLeft, setTimeLeft] = useState("");
   const [progressPercentage, setProgressPercentage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTodos, setSelectedTodos] = useState([]);
+  const [totalDueToday, setTotalDueToday] = useState(0);
+  const [totalOverdue, setTotalOverdue] = useState(0);
+  const [allTodos, setAllTodos] = useState([]);
+
   const handleOpenModal = () => {
     setIsModalOpen(true);
   };
@@ -20,22 +23,22 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
+
   const handleTodoUpdate = useCallback(async () => {
-    const summaryData = await fetchPrioritySummary();
-    setSummaries(summaryData);
-    const todosForToday = await fetchTodosForToday();
+    const todos = await fetchTodosForToday();
+    setAllTodos(todos);
+
     const selectedTodosWithStartTimes = await assignStartTimesAndDurations(
-      todosForToday.filter((todo) => todo.selected_for_today)
+      todos.filter((todo) => todo.selected_for_today)
     );
     setSelectedTodos(selectedTodosWithStartTimes);
+
+    const { dueToday, overdue } = await calculateTodoCounts();
+    setTotalDueToday(dueToday);
+    setTotalOverdue(overdue);
   }, []);
 
   useEffect(() => {
-    const loadSummaries = async () => {
-      const summaryData = await fetchPrioritySummary();
-      setSummaries(summaryData);
-    };
-    loadSummaries();
     handleTodoUpdate();
 
     const updateTime = () => {
@@ -68,12 +71,6 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
     return () => clearInterval(timer);
   }, [handleTodoUpdate]);
 
-  const totalDueToday = summaries.reduce((sum, s) => sum + s.dueTodayCount, 0);
-  const totalOverdue = summaries.reduce(
-    (sum, s) => sum + (s.overdueCount || 0),
-    0
-  );
-
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -102,8 +99,8 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
         <DailyCalendar
           onTodoUpdate={handleTodoUpdate}
           selectedTodos={selectedTodos}
-          totalDueToday={totalDueToday} // Pass totalDueToday
-          totalOverdue={totalOverdue} // Pass totalOverdue
+          totalDueToday={totalDueToday}
+          totalOverdue={totalOverdue}
           handleOpenModal={handleOpenModal}
         />
       </div>
@@ -114,6 +111,8 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
         selectedTodos={selectedTodos}
         setSelectedTodos={setSelectedTodos}
         priorities={priorities}
+        allTodos={allTodos}
+        onTodoUpdate={handleTodoUpdate}
       />
     </div>
   );
