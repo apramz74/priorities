@@ -1,5 +1,9 @@
 import { supabase } from "../supabaseClient";
 
+// Priority-related functions
+// ===========================
+
+// Fetches all non-deleted priorities, ordered by their order and creation date
 export async function fetchPriorities() {
   const { data, error } = await supabase
     .from("priorities")
@@ -15,6 +19,8 @@ export async function fetchPriorities() {
 
   return data || [];
 }
+
+// Adds a new priority with the given name and slot
 export async function addPriority(name, slot) {
   const { data, error } = await supabase
     .from("priorities")
@@ -24,6 +30,7 @@ export async function addPriority(name, slot) {
   return data ? data[0] : null;
 }
 
+// Updates an existing priority, setting order to null if completed or deleted
 export async function updatePriority(priority) {
   const updatedPriority = { ...priority };
   if (priority.completed || priority.deleted) {
@@ -37,6 +44,7 @@ export async function updatePriority(priority) {
   return !error;
 }
 
+// Marks a priority as deleted and sets its order to null
 export async function deletePriority(id) {
   const { error } = await supabase
     .from("priorities")
@@ -46,6 +54,7 @@ export async function deletePriority(id) {
   return !error;
 }
 
+// Toggles the completion status of a priority and updates its order accordingly
 export async function togglePriorityCompletion(id, completed) {
   const { error } = await supabase
     .from("priorities")
@@ -60,156 +69,7 @@ export async function togglePriorityCompletion(id, completed) {
   return !error;
 }
 
-export async function fetchTodos(priorityId, includeCompleted = false) {
-  let query = supabase
-    .from("todos")
-    .select("*")
-    .eq("priority_id", priorityId)
-    .is("deleted", false);
-
-  if (!includeCompleted) {
-    query = query.is("completed", false);
-  }
-
-  const { data, error } = await query;
-  if (error) console.log("Error fetching todos:", error);
-  return data || [];
-}
-
-export async function addTodo(todo) {
-  let priorityId = todo.priority_id;
-  if (priorityId === "misc") {
-    priorityId = await ensureMiscellaneousPriority();
-    if (!priorityId) {
-      console.error("Failed to get or create Miscellaneous priority");
-      return null;
-    }
-  }
-  const { data, error } = await supabase
-    .from("todos")
-    .insert([
-      { ...todo, priority_id: priorityId, completed: false, deleted: false },
-    ])
-    .select();
-  if (error) console.log("Error adding todo:", error);
-  return data ? data[0] : null;
-}
-
-export async function toggleComplete(type, id, completed) {
-  const updateData = completed
-    ? { completed, completed_at: new Date().toISOString() }
-    : { completed, completed_at: null };
-
-  const { error } = await supabase.from(type).update(updateData).eq("id", id);
-
-  if (error) console.log(`Error toggling ${type} completion:`, error);
-  return !error;
-}
-
-export async function toggleDeleted(type, id, deleted) {
-  const { error } = await supabase.from(type).update({ deleted }).eq("id", id);
-  if (error) console.log(`Error toggling ${type} deletion:`, error);
-  return !error;
-}
-
-export async function fetchMilestones(priorityId) {
-  const { data, error } = await supabase
-    .from("milestones")
-    .select("*")
-    .eq("priority_id", priorityId)
-    .is("deleted", false);
-  if (error) console.log("Error fetching milestones:", error);
-  return data || [];
-}
-
-export async function addMilestone(milestone) {
-  const { data, error } = await supabase
-    .from("milestones")
-    .insert([{ ...milestone, deleted: false }])
-    .select();
-  if (error) console.log("Error adding milestone:", error);
-  return data ? data[0] : null;
-}
-
-export async function fetchDependencies(priorityId, includeCompleted = false) {
-  let query = supabase
-    .from("dependencies")
-    .select("*")
-    .eq("priority_id", priorityId)
-    .is("deleted", false);
-
-  if (!includeCompleted) {
-    query = query.is("completed", false);
-  }
-
-  const { data, error } = await query;
-  if (error) console.log("Error fetching dependencies:", error);
-  return data || [];
-}
-
-export async function addDependency(dependency) {
-  const { data, error } = await supabase
-    .from("dependencies")
-    .insert([{ ...dependency, completed: false, deleted: false }])
-    .select();
-  if (error) console.log("Error adding dependency:", error);
-  return data ? data[0] : null;
-}
-
-export async function updateMilestone(milestone) {
-  const { error } = await supabase
-    .from("milestones")
-    .update({
-      title: milestone.title,
-      date: milestone.date,
-      status: milestone.status,
-      deleted: milestone.deleted || false,
-    })
-    .eq("id", milestone.id);
-  if (error) console.log("Error updating milestone:", error);
-  return !error;
-}
-
-export async function deleteMilestone(id) {
-  return toggleDeleted("milestones", id, true);
-}
-
-export async function updateDependency(dependency) {
-  const { data, error } = await supabase
-    .from("dependencies")
-    .update({
-      ...dependency,
-      completed: dependency.completed || false,
-      deleted: dependency.deleted || false,
-    })
-    .eq("id", dependency.id)
-    .select();
-  if (error) console.log("Error updating dependency:", error);
-  return data ? data[0] : null;
-}
-
-export async function deleteDependency(id) {
-  return toggleDeleted("dependencies", id, true);
-}
-
-export async function updateTodo(todo) {
-  const { data, error } = await supabase
-    .from("todos")
-    .update({
-      ...todo,
-      completed: todo.completed || false,
-      deleted: todo.deleted || false,
-    })
-    .eq("id", todo.id)
-    .select();
-  if (error) console.log("Error updating todo:", error);
-  return data ? data[0] : null;
-}
-
-export async function deleteTodo(id) {
-  return toggleDeleted("todos", id, true);
-}
-
+// Updates the order of multiple priorities
 export async function updatePrioritiesOrder(priorities) {
   const { error } = await supabase.from("priorities").upsert(
     priorities.map(({ id, order }) => ({ id, order })),
@@ -220,75 +80,7 @@ export async function updatePrioritiesOrder(priorities) {
   return !error;
 }
 
-export async function fetchMiscTodos(includeCompleted = false) {
-  const miscPriorityId = await ensureMiscellaneousPriority();
-  if (!miscPriorityId) {
-    console.error("Failed to get or create Miscellaneous priority");
-    return [];
-  }
-
-  let query = supabase
-    .from("todos")
-    .select("*")
-    .eq("priority_id", miscPriorityId)
-    .is("deleted", false);
-
-  if (!includeCompleted) {
-    query = query.is("completed", false);
-  }
-
-  const { data, error } = await query;
-  if (error) console.log("Error fetching misc todos:", error);
-  return data || [];
-}
-
-export async function ensureMiscellaneousPriority() {
-  const { data, error } = await supabase
-    .from("priorities")
-    .select("*")
-    .eq("name", "Miscellaneous")
-    .single();
-
-  if (error && error.code !== "PGRST116") {
-    console.error("Error checking for Miscellaneous priority:", error);
-    return null;
-  }
-
-  if (data) {
-    return data.id;
-  }
-
-  const { data: newPriority, error: insertError } = await supabase
-    .from("priorities")
-    .insert({ name: "Miscellaneous", completed: false, deleted: false })
-    .select()
-    .single();
-
-  if (insertError) {
-    console.error("Error creating Miscellaneous priority:", insertError);
-    return null;
-  }
-
-  return newPriority.id;
-}
-
-export async function getNewOrderForReopenedPriority() {
-  const { data, error } = await supabase
-    .from("priorities")
-    .select("order")
-    .is("completed", false)
-    .is("deleted", false)
-    .order("order", { ascending: false })
-    .limit(1);
-
-  if (error) {
-    console.error("Error getting new order for reopened priority:", error);
-    return null;
-  }
-
-  return data && data.length > 0 ? data[0].order + 1 : 0;
-}
-
+// Fetches a summary of priorities, including overdue and due today todo counts
 export async function fetchPrioritySummary() {
   const priorities = await fetchPriorities();
   const summaries = [];
@@ -330,6 +122,108 @@ export async function fetchPrioritySummary() {
   return summaries;
 }
 
+// Calculates a new order for a reopened priority
+export async function getNewOrderForReopenedPriority() {
+  const { data, error } = await supabase
+    .from("priorities")
+    .select("order")
+    .is("completed", false)
+    .is("deleted", false)
+    .order("order", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Error getting new order for reopened priority:", error);
+    return null;
+  }
+
+  return data && data.length > 0 ? data[0].order + 1 : 0;
+}
+
+// Todo-related functions
+// ======================
+
+// Fetches todos for a specific priority, optionally including completed ones
+export async function fetchTodos(priorityId, includeCompleted = false) {
+  let query = supabase
+    .from("todos")
+    .select("*")
+    .eq("priority_id", priorityId)
+    .is("deleted", false);
+
+  if (!includeCompleted) {
+    query = query.is("completed", false);
+  }
+
+  const { data, error } = await query;
+  if (error) console.log("Error fetching todos:", error);
+  return data || [];
+}
+
+// Adds a new todo, handling the case of "misc" priority
+export async function addTodo(todo) {
+  let priorityId = todo.priority_id;
+  if (priorityId === "misc") {
+    priorityId = await ensureMiscellaneousPriority();
+    if (!priorityId) {
+      console.error("Failed to get or create Miscellaneous priority");
+      return null;
+    }
+  }
+  const { data, error } = await supabase
+    .from("todos")
+    .insert([
+      { ...todo, priority_id: priorityId, completed: false, deleted: false },
+    ])
+    .select();
+  if (error) console.log("Error adding todo:", error);
+  return data ? data[0] : null;
+}
+
+// Updates an existing todo
+export async function updateTodo(todo) {
+  const { data, error } = await supabase
+    .from("todos")
+    .update({
+      ...todo,
+      completed: todo.completed || false,
+      deleted: todo.deleted || false,
+    })
+    .eq("id", todo.id)
+    .select();
+  if (error) console.log("Error updating todo:", error);
+  return data ? data[0] : null;
+}
+
+// Marks a todo as deleted
+export async function deleteTodo(id) {
+  return toggleDeleted("todos", id, true);
+}
+
+// Fetches todos for the miscellaneous priority
+export async function fetchMiscTodos(includeCompleted = false) {
+  const miscPriorityId = await ensureMiscellaneousPriority();
+  if (!miscPriorityId) {
+    console.error("Failed to get or create Miscellaneous priority");
+    return [];
+  }
+
+  let query = supabase
+    .from("todos")
+    .select("*")
+    .eq("priority_id", miscPriorityId)
+    .is("deleted", false);
+
+  if (!includeCompleted) {
+    query = query.is("completed", false);
+  }
+
+  const { data, error } = await query;
+  if (error) console.log("Error fetching misc todos:", error);
+  return data || [];
+}
+
+// Fetches todos for a specific week
 export async function fetchWeeklyTodos(startDate, endDate) {
   const { data, error } = await supabase
     .from("todos")
@@ -348,36 +242,18 @@ export async function fetchWeeklyTodos(startDate, endDate) {
   return data;
 }
 
-export async function fetchTodosForToday() {
-  const now = new Date();
-  const today = now.toISOString().split("T")[0];
-
-  const { data, error } = await supabase
-    .from("todos")
-    .select("*")
-    .gte("start_at", `${today}T00:00:00Z`)
-    .lt("start_at", `${today}T23:59:59Z`)
-    .is("deleted", false)
-    .order("start_at", { ascending: true });
-
-  if (error) {
-    console.error("Error fetching today's todos:", error);
-    return [];
-  }
-
-  return data || [];
-}
-
-export async function updateTodoStartTime(id, start_at) {
+// Updates the start time of a todo
+export async function updateTodoStartAt(id, start_at) {
   const { error } = await supabase
     .from("todos")
     .update({ start_at })
     .eq("id", id);
 
-  if (error) console.error("Error updating todo start time:", error);
+  if (error) console.error("Error updating todo start_at:", error);
   return !error;
 }
 
+// Updates the duration of a todo
 export async function updateTodoDuration(id, duration) {
   const { error } = await supabase
     .from("todos")
@@ -388,47 +264,7 @@ export async function updateTodoDuration(id, duration) {
   return !error;
 }
 
-export async function ensureUniqueStartTimes(todos) {
-  const sortedTodos = todos.sort((a, b) => {
-    return new Date(a.start_at) - new Date(b.start_at);
-  });
-
-  let lastEndTime = null;
-  const updatedTodos = [];
-
-  for (const todo of sortedTodos) {
-    let needsUpdate = false;
-
-    if (!todo.start_at) {
-      const today = new Date();
-      today.setHours(
-        lastEndTime ? parseInt(lastEndTime.split(":")[0]) : 9,
-        lastEndTime ? parseInt(lastEndTime.split(":")[1]) : 0,
-        0,
-        0
-      );
-      todo.start_at = today.toISOString();
-      needsUpdate = true;
-    }
-
-    const duration = todo.duration || 30;
-    const startDate = new Date(todo.start_at);
-    const endDate = new Date(startDate.getTime() + duration * 60000);
-    lastEndTime = endDate.toTimeString().substring(0, 5);
-
-    updatedTodos.push(todo);
-
-    if (needsUpdate) {
-      await updateTodoStartTime(todo.id, todo.start_at);
-    }
-    if (!todo.duration) {
-      await updateTodoDuration(todo.id, duration);
-    }
-  }
-
-  return updatedTodos;
-}
-
+// Fetches and selects todos for today, assigning start times and durations
 export async function fetchSelectedTodosForToday() {
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -441,7 +277,7 @@ export async function fetchSelectedTodosForToday() {
     .select("*, priority:priorities(id, name, order)")
     .eq("completed", false)
     .eq("deleted", false)
-    .or(`due_date.lte.${today},due_date.gt.${today}`)
+    .or(`due_date.lte.${today},due_date.gt.${today},selected_for_today.eq.true`)
     .order("priority(order)", { ascending: true })
     .order("due_date", { ascending: true });
 
@@ -483,27 +319,45 @@ export async function fetchSelectedTodosForToday() {
   if (selectedTodos.length < 5)
     selectTodos(groupedTodos.future, 5 - selectedTodos.length);
 
-  // Assign start times and end times to selected todos, and update due dates
-  const todosWithTimes = await ensureUniqueStartAndEndTimes(selectedTodos);
+  // Assign start times and durations to selected todos
+  let lastEndTime = null;
+  const updatedTodos = [];
 
-  // Update the selected todos in the database
-  for (const todo of todosWithTimes) {
+  for (const todo of selectedTodos) {
+    let startDate = new Date(today);
+    startDate.setHours(
+      lastEndTime ? parseInt(lastEndTime.split(":")[0]) : 9,
+      lastEndTime ? parseInt(lastEndTime.split(":")[1]) : 0,
+      0,
+      0
+    );
+
+    const duration = todo.duration || 30;
+    const endDate = new Date(startDate.getTime() + duration * 60000);
+    lastEndTime = endDate.toTimeString().substring(0, 5);
+
+    todo.start_at = startDate.toISOString();
+    todo.end_time = lastEndTime;
+    todo.selected_for_today = true;
+
+    updatedTodos.push(todo);
+
+    // Update the todo in the database
     await updateTodoSelectedForToday(todo.id, true);
-    if (todo.start_at) {
-      await updateTodoStartTime(todo.id, todo.start_at);
-    }
-    if (todo.duration) {
-      await updateTodoDuration(todo.id, todo.duration);
+    await updateTodoStartAt(todo.id, todo.start_at);
+    if (!todo.duration) {
+      await updateTodoDuration(todo.id, duration);
     }
   }
 
   // Return all todos, with the selected ones marked and updated
   return data.map((todo) => {
-    const selectedTodo = todosWithTimes.find((t) => t.id === todo.id);
-    return selectedTodo ? { ...selectedTodo, selected_for_today: true } : todo;
+    const updatedTodo = updatedTodos.find((t) => t.id === todo.id);
+    return updatedTodo ? { ...updatedTodo, selected_for_today: true } : todo;
   });
 }
 
+// Updates the selected_for_today status of a todo
 export async function updateTodoSelectedForToday(id, selected) {
   const { data, error } = await supabase
     .from("todos")
@@ -516,64 +370,10 @@ export async function updateTodoSelectedForToday(id, selected) {
     return false;
   }
 
-  if (selected && data && data[0]) {
-    const updatedTodos = await ensureUniqueStartAndEndTimes([data[0]]);
-    if (updatedTodos.length > 0) {
-      return updatedTodos[0];
-    }
-  }
-
   return data ? data[0] : null;
 }
 
-export async function ensureUniqueStartAndEndTimes(todos) {
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-    2,
-    "0"
-  )}-${String(now.getDate()).padStart(2, "0")}`;
-  const sortedTodos = todos.sort((a, b) => {
-    return new Date(a.start_at) - new Date(b.start_at);
-  });
-
-  let lastEndTime = null;
-  const updatedTodos = [];
-
-  for (const todo of sortedTodos) {
-    let needsUpdate = false;
-
-    if (todo.selected_for_today) {
-      const startDate = new Date(today);
-      startDate.setHours(
-        lastEndTime ? parseInt(lastEndTime.split(":")[0]) : 9,
-        lastEndTime ? parseInt(lastEndTime.split(":")[1]) : 0,
-        0,
-        0
-      );
-      todo.start_at = startDate.toISOString();
-      needsUpdate = true;
-    }
-
-    const duration = todo.duration || 30;
-    const startDate = new Date(todo.start_at);
-    const endDate = new Date(startDate.getTime() + duration * 60000);
-
-    lastEndTime = endDate.toTimeString().substring(0, 5);
-
-    todo.end_time = lastEndTime;
-    updatedTodos.push(todo);
-
-    if (needsUpdate) {
-      await updateTodoStartTime(todo.id, todo.start_at);
-    }
-    if (!todo.duration) {
-      await updateTodoDuration(todo.id, duration);
-    }
-  }
-
-  return updatedTodos;
-}
-
+// Updates the due date of a todo
 export async function updateTodoDueDate(id, due_date) {
   const { error } = await supabase
     .from("todos")
@@ -582,4 +382,151 @@ export async function updateTodoDueDate(id, due_date) {
 
   if (error) console.error("Error updating todo due date:", error);
   return !error;
+}
+
+// Milestone-related functions
+// ===========================
+
+// Fetches milestones for a specific priority
+export async function fetchMilestones(priorityId) {
+  const { data, error } = await supabase
+    .from("milestones")
+    .select("*")
+    .eq("priority_id", priorityId)
+    .is("deleted", false);
+  if (error) console.log("Error fetching milestones:", error);
+  return data || [];
+}
+
+// Adds a new milestone
+export async function addMilestone(milestone) {
+  const { data, error } = await supabase
+    .from("milestones")
+    .insert([{ ...milestone, deleted: false }])
+    .select();
+  if (error) console.log("Error adding milestone:", error);
+  return data ? data[0] : null;
+}
+
+// Updates an existing milestone
+export async function updateMilestone(milestone) {
+  const { error } = await supabase
+    .from("milestones")
+    .update({
+      title: milestone.title,
+      date: milestone.date,
+      status: milestone.status,
+      deleted: milestone.deleted || false,
+    })
+    .eq("id", milestone.id);
+  if (error) console.log("Error updating milestone:", error);
+  return !error;
+}
+
+// Marks a milestone as deleted
+export async function deleteMilestone(id) {
+  return toggleDeleted("milestones", id, true);
+}
+
+// Dependency-related functions
+// ============================
+
+// Fetches dependencies for a specific priority
+export async function fetchDependencies(priorityId, includeCompleted = false) {
+  let query = supabase
+    .from("dependencies")
+    .select("*")
+    .eq("priority_id", priorityId)
+    .is("deleted", false);
+
+  if (!includeCompleted) {
+    query = query.is("completed", false);
+  }
+
+  const { data, error } = await query;
+  if (error) console.log("Error fetching dependencies:", error);
+  return data || [];
+}
+
+// Adds a new dependency
+export async function addDependency(dependency) {
+  const { data, error } = await supabase
+    .from("dependencies")
+    .insert([{ ...dependency, completed: false, deleted: false }])
+    .select();
+  if (error) console.log("Error adding dependency:", error);
+  return data ? data[0] : null;
+}
+
+// Updates an existing dependency
+export async function updateDependency(dependency) {
+  const { data, error } = await supabase
+    .from("dependencies")
+    .update({
+      ...dependency,
+      completed: dependency.completed || false,
+      deleted: dependency.deleted || false,
+    })
+    .eq("id", dependency.id)
+    .select();
+  if (error) console.log("Error updating dependency:", error);
+  return data ? data[0] : null;
+}
+
+// Marks a dependency as deleted
+export async function deleteDependency(id) {
+  return toggleDeleted("dependencies", id, true);
+}
+
+// Utility functions
+// =================
+
+// Toggles the completion status of a todo or dependency
+export async function toggleComplete(type, id, completed) {
+  const updateData = completed
+    ? { completed, completed_at: new Date().toISOString() }
+    : { completed, completed_at: null };
+
+  const { error } = await supabase.from(type).update(updateData).eq("id", id);
+
+  if (error) console.log(`Error toggling ${type} completion:`, error);
+  return !error;
+}
+
+// Toggles the deleted status of a todo, dependency, or milestone
+export async function toggleDeleted(type, id, deleted) {
+  const { error } = await supabase.from(type).update({ deleted }).eq("id", id);
+  if (error) console.log(`Error toggling ${type} deletion:`, error);
+  return !error;
+}
+
+// Ensures the existence of a miscellaneous priority
+export async function ensureMiscellaneousPriority() {
+  const { data, error } = await supabase
+    .from("priorities")
+    .select("*")
+    .eq("name", "Miscellaneous")
+    .single();
+
+  if (error && error.code !== "PGRST116") {
+    console.error("Error checking for Miscellaneous priority:", error);
+    return null;
+  }
+
+  if (data) {
+    return data.id;
+  }
+
+  const { data: newPriority, error: insertError } = await supabase
+    .from("priorities")
+    .insert({ name: "Miscellaneous", completed: false, deleted: false })
+    .select()
+    .single();
+
+  if (insertError) {
+    console.error("Error creating Miscellaneous priority:", insertError);
+    return null;
+  }
+
+  return newPriority.id;
 }
