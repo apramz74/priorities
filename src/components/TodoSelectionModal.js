@@ -141,12 +141,12 @@ const TodoSelectionModal = ({
 
   return (
     <div
-      className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
+      className={`fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 ${
         isOpen ? "" : "hidden"
       }`}
     >
-      <div className="gradient-background rounded-lg shadow-xl w-full max-w-xl">
-        <div className="modal-content bg-white m-2 p-6 rounded-lg relative">
+      <div className="gradient-background rounded-lg shadow-xl w-full max-w-xl mt-20">
+        <div className="modal-content bg-white m-2 p-6 rounded-lg relative max-h-[calc(100vh-10rem)] overflow-y-auto">
           <h3 className="text-xl font-bold mb-4">
             What are you working on today?
           </h3>
