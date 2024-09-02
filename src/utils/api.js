@@ -350,31 +350,28 @@ export async function fetchWeeklyTodos(startDate, endDate) {
 
 export async function fetchTodosForToday() {
   const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-    2,
-    "0"
-  )}-${String(now.getDate()).padStart(2, "0")}`;
+  const today = now.toISOString().split("T")[0];
 
   const { data, error } = await supabase
     .from("todos")
     .select("*")
-    .eq("due_date", today)
+    .gte("start_at", `${today}T00:00:00Z`)
+    .lt("start_at", `${today}T23:59:59Z`)
     .is("deleted", false)
-    .order("start_time", { ascending: true });
+    .order("start_at", { ascending: true });
 
   if (error) {
     console.error("Error fetching today's todos:", error);
     return [];
   }
 
-  // Ensure unique start times before returning the data
-  return await ensureUniqueStartTimes(data || []);
+  return data || [];
 }
 
-export async function updateTodoStartTime(id, start_time) {
+export async function updateTodoStartTime(id, start_at) {
   const { error } = await supabase
     .from("todos")
-    .update({ start_time: start_time })
+    .update({ start_at })
     .eq("id", id);
 
   if (error) console.error("Error updating todo start time:", error);
@@ -391,13 +388,9 @@ export async function updateTodoDuration(id, duration) {
   return !error;
 }
 
-// Add this new function
 export async function ensureUniqueStartTimes(todos) {
   const sortedTodos = todos.sort((a, b) => {
-    if (a.start_time && b.start_time) {
-      return a.start_time.localeCompare(b.start_time);
-    }
-    return a.start_time ? -1 : 1;
+    return new Date(a.start_at) - new Date(b.start_at);
   });
 
   let lastEndTime = null;
@@ -406,24 +399,27 @@ export async function ensureUniqueStartTimes(todos) {
   for (const todo of sortedTodos) {
     let needsUpdate = false;
 
-    if (!todo.start_time) {
-      // Only set start time if it's not already set
-      todo.start_time = lastEndTime || "09:00";
+    if (!todo.start_at) {
+      const today = new Date();
+      today.setHours(
+        lastEndTime ? parseInt(lastEndTime.split(":")[0]) : 9,
+        lastEndTime ? parseInt(lastEndTime.split(":")[1]) : 0,
+        0,
+        0
+      );
+      todo.start_at = today.toISOString();
       needsUpdate = true;
     }
 
-    const duration = todo.duration || 30; // Use existing duration or default to 30
-    const [hours, minutes] = todo.start_time.split(":").map(Number);
-    const endTime = new Date(2000, 0, 1, hours, minutes + duration);
-    lastEndTime = `${String(endTime.getHours()).padStart(2, "0")}:${String(
-      endTime.getMinutes()
-    ).padStart(2, "0")}`;
+    const duration = todo.duration || 30;
+    const startDate = new Date(todo.start_at);
+    const endDate = new Date(startDate.getTime() + duration * 60000);
+    lastEndTime = endDate.toTimeString().substring(0, 5);
 
     updatedTodos.push(todo);
 
-    // Only update in the database if changes were made
     if (needsUpdate) {
-      await updateTodoStartTime(todo.id, todo.start_time);
+      await updateTodoStartTime(todo.id, todo.start_at);
     }
     if (!todo.duration) {
       await updateTodoDuration(todo.id, duration);
@@ -431,4 +427,159 @@ export async function ensureUniqueStartTimes(todos) {
   }
 
   return updatedTodos;
+}
+
+export async function fetchSelectedTodosForToday() {
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}-${String(now.getDate()).padStart(2, "0")}`;
+
+  const { data, error } = await supabase
+    .from("todos")
+    .select("*, priority:priorities(id, name, order)")
+    .eq("completed", false)
+    .eq("deleted", false)
+    .or(`due_date.lte.${today},due_date.gt.${today}`)
+    .order("priority(order)", { ascending: true })
+    .order("due_date", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching todos for daily selection:", error);
+    return [];
+  }
+
+  // Group todos by due date category and priority
+  const groupedTodos = data.reduce((acc, todo) => {
+    let key;
+    if (todo.due_date < today) key = "overdue";
+    else if (todo.due_date === today) key = "dueToday";
+    else key = "future";
+
+    if (!acc[key]) acc[key] = {};
+    if (!acc[key][todo.priority.id]) acc[key][todo.priority.id] = [];
+    acc[key][todo.priority.id].push(todo);
+    return acc;
+  }, {});
+
+  // Select 5 todos based on priority and due date
+  const selectedTodos = [];
+  const selectTodos = (todos, limit) => {
+    for (const priorityId in todos) {
+      for (const todo of todos[priorityId]) {
+        if (selectedTodos.length < limit) {
+          selectedTodos.push({ ...todo, selected_for_today: true });
+        } else {
+          return;
+        }
+      }
+    }
+  };
+
+  selectTodos(groupedTodos.overdue, 5);
+  if (selectedTodos.length < 5)
+    selectTodos(groupedTodos.dueToday, 5 - selectedTodos.length);
+  if (selectedTodos.length < 5)
+    selectTodos(groupedTodos.future, 5 - selectedTodos.length);
+
+  // Assign start times and end times to selected todos, and update due dates
+  const todosWithTimes = await ensureUniqueStartAndEndTimes(selectedTodos);
+
+  // Update the selected todos in the database
+  for (const todo of todosWithTimes) {
+    await updateTodoSelectedForToday(todo.id, true);
+    if (todo.start_at) {
+      await updateTodoStartTime(todo.id, todo.start_at);
+    }
+    if (todo.duration) {
+      await updateTodoDuration(todo.id, todo.duration);
+    }
+  }
+
+  // Return all todos, with the selected ones marked and updated
+  return data.map((todo) => {
+    const selectedTodo = todosWithTimes.find((t) => t.id === todo.id);
+    return selectedTodo ? { ...selectedTodo, selected_for_today: true } : todo;
+  });
+}
+
+export async function updateTodoSelectedForToday(id, selected) {
+  const { data, error } = await supabase
+    .from("todos")
+    .update({ selected_for_today: selected })
+    .eq("id", id)
+    .select();
+
+  if (error) {
+    console.error("Error updating todo selected for today:", error);
+    return false;
+  }
+
+  if (selected && data && data[0]) {
+    const updatedTodos = await ensureUniqueStartAndEndTimes([data[0]]);
+    if (updatedTodos.length > 0) {
+      return updatedTodos[0];
+    }
+  }
+
+  return data ? data[0] : null;
+}
+
+export async function ensureUniqueStartAndEndTimes(todos) {
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}-${String(now.getDate()).padStart(2, "0")}`;
+  const sortedTodos = todos.sort((a, b) => {
+    return new Date(a.start_at) - new Date(b.start_at);
+  });
+
+  let lastEndTime = null;
+  const updatedTodos = [];
+
+  for (const todo of sortedTodos) {
+    let needsUpdate = false;
+
+    if (todo.selected_for_today) {
+      const startDate = new Date(today);
+      startDate.setHours(
+        lastEndTime ? parseInt(lastEndTime.split(":")[0]) : 9,
+        lastEndTime ? parseInt(lastEndTime.split(":")[1]) : 0,
+        0,
+        0
+      );
+      todo.start_at = startDate.toISOString();
+      needsUpdate = true;
+    }
+
+    const duration = todo.duration || 30;
+    const startDate = new Date(todo.start_at);
+    const endDate = new Date(startDate.getTime() + duration * 60000);
+
+    lastEndTime = endDate.toTimeString().substring(0, 5);
+
+    todo.end_time = lastEndTime;
+    updatedTodos.push(todo);
+
+    if (needsUpdate) {
+      await updateTodoStartTime(todo.id, todo.start_at);
+    }
+    if (!todo.duration) {
+      await updateTodoDuration(todo.id, duration);
+    }
+  }
+
+  return updatedTodos;
+}
+
+export async function updateTodoDueDate(id, due_date) {
+  const { error } = await supabase
+    .from("todos")
+    .update({ due_date: due_date })
+    .eq("id", id);
+
+  if (error) console.error("Error updating todo due date:", error);
+  return !error;
 }
