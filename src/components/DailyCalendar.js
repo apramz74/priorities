@@ -13,12 +13,13 @@ import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 const localizer = momentLocalizer(moment);
 const DnDCalendar = withDragAndDrop(Calendar);
 
-const DailyCalendar = ({ onTodoUpdate, todos }) => {
+const DailyCalendar = ({ onTodoUpdate, selectedTodos }) => {
   const [scrolledDate, setScrolledDate] = useState(new Date());
 
   const formatTodosForCalendar = useCallback((todos) => {
     return todos.map((todo) => {
       const start = new Date(todo.start_at);
+
       const end = new Date(start.getTime() + (todo.duration || 30) * 60000);
 
       return {
@@ -30,8 +31,6 @@ const DailyCalendar = ({ onTodoUpdate, todos }) => {
       };
     });
   }, []);
-
-  console.log(formatTodosForCalendar(todos));
 
   const handleSelectEvent = async (event) => {
     const updatedTodo = {
@@ -54,6 +53,7 @@ const DailyCalendar = ({ onTodoUpdate, todos }) => {
 
   const handleEventDrop = async ({ event, start, end }) => {
     const updatedTodo = { ...event.resource, start_at: start.toISOString() };
+
     const duration = moment
       .duration(moment(end).diff(moment(start)))
       .asMinutes();
@@ -89,13 +89,13 @@ const DailyCalendar = ({ onTodoUpdate, todos }) => {
       >
         <DnDCalendar
           localizer={localizer}
-          events={formatTodosForCalendar(todos)}
+          events={formatTodosForCalendar(selectedTodos)}
           startAccessor="start"
           endAccessor="end"
           style={{ height: "100%" }}
           view="day"
           views={["day"]}
-          step={30}
+          step={10}
           timeslots={1}
           onSelectEvent={handleSelectEvent}
           onEventResize={handleEventResize}
