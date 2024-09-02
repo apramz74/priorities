@@ -112,7 +112,7 @@ const Navigation = ({
         <h3 className="text-sm font-semibold text-gray-600 mb-2">PLANNING</h3>
         <button
           onClick={() => onSelectView({ type: "dailyPlan" })}
-          className={`w-full text-left py-2 px-4 rounded flex items-center text-sm ${
+          className={`w-full text-left py-2 px-4 rounded flex items-center text-sm mb-2 ${
             activeView.type === "dailyPlan"
               ? "bg-indigo-100 text-indigo-700"
               : "text-gray-600 hover:bg-gray-100"

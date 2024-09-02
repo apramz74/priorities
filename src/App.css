@@ -272,8 +272,18 @@
 }
 
 .daily-calendar .rbc-current-time-indicator {
-  background-color: #ef4444;
+  background-color: #0000d1;
   height: 2px;
+}
+.daily-calendar .rbc-current-time-indicator::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  background-color: #4338ca; /* indigo-deep color */
+  border-radius: 50%;
 }
 
 .daily-calendar .rbc-label {

@@ -74,7 +74,7 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-black mb-8">Home</h1>
+        <h1 className="text-3xl font-black mb-8">Daily Plan</h1>
         <h2 className="text-xl font-medium mb-2">
           <span className="text-indigo-deep font-bold">
             {timeLeft.split(" ")[0]} {timeLeft.split(" ")[1]}
