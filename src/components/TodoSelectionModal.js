@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { fetchTodosForToday, updateTodoSelectedForToday } from "../utils/api";
+import {
+  fetchTodosForToday,
+  updateTodoSelectedForToday,
+  assignStartTimesAndDurations,
+} from "../utils/api";
 
 const TodoSelectionModal = ({
   isOpen,
@@ -24,16 +28,15 @@ const TodoSelectionModal = ({
   const handleTodoSelect = async (todo) => {
     const isSelected = selectedTodos.some((t) => t.id === todo.id);
     const updatedTodo = await updateTodoSelectedForToday(todo.id, !isSelected);
+
     if (updatedTodo) {
       setSelectedTodos((prev) => {
         const newSelectedTodos = isSelected
           ? prev.filter((t) => t.id !== todo.id)
           : [...prev, updatedTodo];
-        // Log the updated selectedTodos here
-
         return newSelectedTodos;
       });
-
+      assignStartTimesAndDurations(updatedTodo);
       setTodos((prev) =>
         prev.map((t) => (t.id === updatedTodo.id ? updatedTodo : t))
       );
