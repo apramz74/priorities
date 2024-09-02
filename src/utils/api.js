@@ -85,9 +85,7 @@ export async function fetchPrioritySummary() {
   const priorities = await fetchPriorities();
   const summaries = [];
 
-  // Set today's date to midnight
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Set time to midnight
+  const today = new Date(getTodayDate());
 
   for (const priority of priorities) {
     const todos = await fetchTodos(priority.id, true); // Fetch all todos for the priority
@@ -264,13 +262,9 @@ export async function updateTodoDuration(id, duration) {
   return !error;
 }
 
-// Fetches and selects todos for today, assigning start times and durations
-export async function fetchSelectedTodosForToday() {
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-    2,
-    "0"
-  )}-${String(now.getDate()).padStart(2, "0")}`;
+// Fetches todos for today
+export async function fetchTodosForToday() {
+  const today = getTodayDate();
 
   const { data, error } = await supabase
     .from("todos")
@@ -285,73 +279,48 @@ export async function fetchSelectedTodosForToday() {
     console.error("Error fetching todos for daily selection:", error);
     return [];
   }
+  return data;
+}
 
-  // Group todos by due date category and priority
-  const groupedTodos = data.reduce((acc, todo) => {
-    let key;
-    if (todo.due_date < today) key = "overdue";
-    else if (todo.due_date === today) key = "dueToday";
-    else key = "future";
-
-    if (!acc[key]) acc[key] = {};
-    if (!acc[key][todo.priority.id]) acc[key][todo.priority.id] = [];
-    acc[key][todo.priority.id].push(todo);
-    return acc;
-  }, {});
-
-  // Select 5 todos based on priority and due date
-  const selectedTodos = [];
-  const selectTodos = (todos, limit) => {
-    for (const priorityId in todos) {
-      for (const todo of todos[priorityId]) {
-        if (selectedTodos.length < limit) {
-          selectedTodos.push({ ...todo, selected_for_today: true });
-        } else {
-          return;
-        }
-      }
-    }
-  };
-
-  selectTodos(groupedTodos.overdue, 5);
-  if (selectedTodos.length < 5)
-    selectTodos(groupedTodos.dueToday, 5 - selectedTodos.length);
-  if (selectedTodos.length < 5)
-    selectTodos(groupedTodos.future, 5 - selectedTodos.length);
-
-  // Assign start times and durations to selected todos
+// Assigns start times and durations to selected todos
+export async function assignStartTimesAndDurations(todos) {
+  const today = getTodayDate();
   let lastEndTime = null;
   const updatedTodos = [];
 
-  for (const todo of selectedTodos) {
-    let startDate = new Date(today);
-    startDate.setHours(
-      lastEndTime ? parseInt(lastEndTime.split(":")[0]) : 9,
-      lastEndTime ? parseInt(lastEndTime.split(":")[1]) : 0,
-      0,
-      0
-    );
+  for (const todo of todos) {
+    if (
+      todo.selected_for_today &&
+      (!todo.start_at || todo.start_at.split("T")[0] !== today)
+    ) {
+      let [year, month, day] = today.split("-").map(Number);
+      let startDate = new Date(Date.UTC(year, month - 1, day + 1, 0, 0, 0)); // Create a date in UTC at midnight
 
-    const duration = todo.duration || 30;
-    const endDate = new Date(startDate.getTime() + duration * 60000);
-    lastEndTime = endDate.toTimeString().substring(0, 5);
+      startDate.setHours(
+        lastEndTime ? parseInt(lastEndTime.split(":")[0]) : 9,
+        lastEndTime ? parseInt(lastEndTime.split(":")[1]) : 0,
+        0,
+        0
+      );
 
-    todo.start_at = startDate.toISOString();
-    todo.end_time = lastEndTime;
-    todo.selected_for_today = true;
+      const duration = todo.duration || 30;
+      const endDate = new Date(startDate.getTime() + duration * 60000);
+      lastEndTime = endDate.toTimeString().substring(0, 5);
 
-    updatedTodos.push(todo);
+      todo.start_at = startDate.toISOString();
+      todo.end_time = lastEndTime;
 
-    // Update the todo in the database
-    await updateTodoSelectedForToday(todo.id, true);
-    await updateTodoStartAt(todo.id, todo.start_at);
-    if (!todo.duration) {
-      await updateTodoDuration(todo.id, duration);
+      updatedTodos.push(todo);
+
+      // Update the todo in the database
+      await updateTodoStartAt(todo.id, todo.start_at);
+      if (!todo.duration) {
+        await updateTodoDuration(todo.id, duration);
+      }
     }
   }
 
-  // Return all todos, with the selected ones marked and updated
-  return data.map((todo) => {
+  return todos.map((todo) => {
     const updatedTodo = updatedTodos.find((t) => t.id === todo.id);
     return updatedTodo ? { ...updatedTodo, selected_for_today: true } : todo;
   });
@@ -529,4 +498,9 @@ export async function ensureMiscellaneousPriority() {
   }
 
   return newPriority.id;
+}
+
+// Returns today's date in 'YYYY-MM-DD' format
+function getTodayDate() {
+  return new Date().toLocaleDateString("en-CA");
 }

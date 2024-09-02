@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { fetchPrioritySummary, fetchSelectedTodosForToday } from "../utils/api";
+import {
+  fetchPrioritySummary,
+  fetchTodosForToday,
+  assignStartTimesAndDurations,
+} from "../utils/api";
 import DailyCalendar from "./DailyCalendar";
 import TodoSelectionModal from "./TodoSelectionModal";
 
@@ -13,9 +17,9 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
   const handleTodoUpdate = useCallback(async () => {
     const summaryData = await fetchPrioritySummary();
     setSummaries(summaryData);
-    const todosForToday = await fetchSelectedTodosForToday();
-    const selectedTodosWithStartTimes = todosForToday.filter(
-      (todo) => todo.selected_for_today
+    const todosForToday = await fetchTodosForToday();
+    const selectedTodosWithStartTimes = await assignStartTimesAndDurations(
+      todosForToday.filter((todo) => todo.selected_for_today)
     );
     setSelectedTodos(selectedTodosWithStartTimes);
   }, []);
@@ -72,10 +76,6 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
     setIsModalOpen(false);
   };
 
-  const handleTodosSelected = (newSelectedTodos) => {
-    setSelectedTodos(newSelectedTodos);
-  };
-
   return (
     <div className="p-6">
       <div className="mb-8">
@@ -114,13 +114,17 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
       </div>
 
       <div className="mt-8">
-        <DailyCalendar onTodoUpdate={handleTodoUpdate} todos={selectedTodos} />
+        <DailyCalendar
+          onTodoUpdate={handleTodoUpdate}
+          selectedTodos={selectedTodos}
+        />
       </div>
 
       <TodoSelectionModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onTodosSelected={handleTodosSelected}
+        selectedTodos={selectedTodos}
+        setSelectedTodos={setSelectedTodos}
       />
     </div>
   );
