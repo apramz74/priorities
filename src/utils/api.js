@@ -282,6 +282,28 @@ export async function fetchTodosForToday() {
   return data;
 }
 
+// New function to calculate due today and overdue todos
+export async function calculateTodoCounts() {
+  const today = getTodayDate();
+
+  const { data, error } = await supabase
+    .from("todos")
+    .select("due_date")
+    .eq("completed", false)
+    .eq("deleted", false)
+    .lte("due_date", today);
+
+  if (error) {
+    console.error("Error fetching todos for count calculation:", error);
+    return { dueToday: 0, overdue: 0 };
+  }
+
+  const dueToday = data.filter((todo) => todo.due_date === today).length;
+  const overdue = data.filter((todo) => todo.due_date < today).length;
+
+  return { dueToday, overdue };
+}
+
 // Assigns start times and durations to selected todos
 export async function assignStartTimesAndDurations(todosInput) {
   const todos = Array.isArray(todosInput) ? todosInput : [todosInput];
