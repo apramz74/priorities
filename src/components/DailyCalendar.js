@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import {
-  fetchTodosForToday,
   toggleComplete,
   updateTodoStartTime,
   updateTodoDuration,
@@ -11,31 +10,16 @@ import {
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
-// Setup the localizer for react-big-calendar
 const localizer = momentLocalizer(moment);
-
-// Create a DnD Calendar
 const DnDCalendar = withDragAndDrop(Calendar);
 
-const DailyCalendar = ({ onTodoUpdate }) => {
-  const [todos, setTodos] = useState([]);
+const DailyCalendar = ({ onTodoUpdate, todos }) => {
   const [scrolledDate, setScrolledDate] = useState(new Date());
 
-  useEffect(() => {
-    loadTodosForToday();
-  }); // Empty dependency array ensures this runs only once on mount
-
-  const loadTodosForToday = async () => {
-    const todayTodos = await fetchTodosForToday();
-    const formattedTodos = formatTodosForCalendar(todayTodos);
-    setTodos(formattedTodos);
-  };
-
-  const formatTodosForCalendar = (todos) => {
+  const formatTodosForCalendar = useCallback((todos) => {
     return todos.map((todo) => {
-      const start = new Date(`${todo.due_date}T${todo.start_time}`);
-      const durationInMinutes = todo.duration || 30;
-      const end = new Date(start.getTime() + durationInMinutes * 60000);
+      const start = new Date(todo.start_at);
+      const end = new Date(start.getTime() + (todo.duration || 30) * 60000);
 
       return {
         id: todo.id,
@@ -43,10 +27,11 @@ const DailyCalendar = ({ onTodoUpdate }) => {
         start: start,
         end: end,
         resource: todo,
-        duration: durationInMinutes,
       };
     });
-  };
+  }, []);
+
+  console.log(formatTodosForCalendar(todos));
 
   const handleSelectEvent = async (event) => {
     const updatedTodo = {
@@ -54,28 +39,27 @@ const DailyCalendar = ({ onTodoUpdate }) => {
       completed: !event.resource.completed,
     };
     await toggleComplete("todos", updatedTodo.id, updatedTodo.completed);
-    loadTodosForToday();
-    onTodoUpdate(); // Call the callback function
+    onTodoUpdate();
   };
 
   const handleEventResize = async ({ event, start, end }) => {
-    const updatedTodo = { ...event.resource, start_time: start, end_time: end };
+    const updatedTodo = { ...event.resource, start_at: start.toISOString() };
     const duration = moment
       .duration(moment(end).diff(moment(start)))
       .asMinutes();
-    await updateTodoStartTime(updatedTodo.id, moment(start).format("HH:mm"));
+    await updateTodoStartTime(updatedTodo.id, updatedTodo.start_at);
     await updateTodoDuration(updatedTodo.id, duration);
-    loadTodosForToday();
+    onTodoUpdate();
   };
 
   const handleEventDrop = async ({ event, start, end }) => {
-    const updatedTodo = { ...event.resource, start_time: start, end_time: end };
+    const updatedTodo = { ...event.resource, start_at: start.toISOString() };
     const duration = moment
       .duration(moment(end).diff(moment(start)))
       .asMinutes();
-    await updateTodoStartTime(updatedTodo.id, moment(start).format("HH:mm"));
+    await updateTodoStartTime(updatedTodo.id, updatedTodo.start_at);
     await updateTodoDuration(updatedTodo.id, duration);
-    loadTodosForToday();
+    onTodoUpdate();
   };
 
   const eventStyleGetter = (event) => {
@@ -85,7 +69,7 @@ const DailyCalendar = ({ onTodoUpdate }) => {
       borderRadius: "8px",
       border: `2px solid ${isCompleted ? "#D1D5DB" : "#818CF8"}`,
       color: isCompleted ? "#6B7280" : "#1F2937",
-      padding: "4px 8px 4px 4px", // Added more padding on the right
+      padding: "4px 8px 4px 4px",
       fontSize: "12px",
       fontWeight: "500",
     };
@@ -105,7 +89,7 @@ const DailyCalendar = ({ onTodoUpdate }) => {
       >
         <DnDCalendar
           localizer={localizer}
-          events={todos}
+          events={formatTodosForCalendar(todos)}
           startAccessor="start"
           endAccessor="end"
           style={{ height: "100%" }}
@@ -126,9 +110,9 @@ const DailyCalendar = ({ onTodoUpdate }) => {
           formats={{
             timeGutterFormat: (date, culture, localizer) =>
               localizer.format(date, "HH:mm", culture),
-            dayFormat: () => "", // This will remove the day format text
+            dayFormat: () => "",
           }}
-          toolbar={false} // This will remove the toolbar
+          toolbar={false}
         />
       </div>
     </div>

@@ -1,15 +1,23 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { fetchPrioritySummary } from "../utils/api";
+import { fetchPrioritySummary, fetchSelectedTodosForToday } from "../utils/api";
 import DailyCalendar from "./DailyCalendar";
+import TodoSelectionModal from "./TodoSelectionModal";
 
-const HomeView = ({ priorities, setSelectedPriority, setView }) => {
+const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
   const [summaries, setSummaries] = useState([]);
   const [timeLeft, setTimeLeft] = useState("");
   const [progressPercentage, setProgressPercentage] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTodos, setSelectedTodos] = useState([]);
 
   const handleTodoUpdate = useCallback(async () => {
     const summaryData = await fetchPrioritySummary();
     setSummaries(summaryData);
+    const todosForToday = await fetchSelectedTodosForToday();
+    const selectedTodosWithStartTimes = todosForToday.filter(
+      (todo) => todo.selected_for_today
+    );
+    setSelectedTodos(selectedTodosWithStartTimes);
   }, []);
 
   useEffect(() => {
@@ -18,6 +26,7 @@ const HomeView = ({ priorities, setSelectedPriority, setView }) => {
       setSummaries(summaryData);
     };
     loadSummaries();
+    handleTodoUpdate();
 
     const updateTime = () => {
       const now = new Date();
@@ -25,10 +34,10 @@ const HomeView = ({ priorities, setSelectedPriority, setView }) => {
       const endTime = new Date(now).setHours(17, 0, 0, 0);
 
       if (now < startTime) {
-        setTimeLeft("Workday  hasn't started yet");
+        setTimeLeft("Workday hasn't started yet");
         setProgressPercentage(0);
       } else if (now > endTime) {
-        setTimeLeft("Workday  is over");
+        setTimeLeft("Workday is over");
         setProgressPercentage(100);
       } else {
         const totalMinutes = (endTime - startTime) / 60000;
@@ -38,7 +47,7 @@ const HomeView = ({ priorities, setSelectedPriority, setView }) => {
         const hours = Math.floor(remainingMinutes / 60);
         const minutes = Math.floor(remainingMinutes % 60);
 
-        setTimeLeft(`${hours}h ${minutes}m  left in the workday`);
+        setTimeLeft(`${hours}h ${minutes}m left in the workday`);
         setProgressPercentage((elapsedMinutes / totalMinutes) * 100);
       }
     };
@@ -47,16 +56,25 @@ const HomeView = ({ priorities, setSelectedPriority, setView }) => {
     const timer = setInterval(updateTime, 60000); // Update every minute
 
     return () => clearInterval(timer);
-  }, []);
+  }, [handleTodoUpdate]);
 
-  const totalDueToday = summaries.reduce(
-    (sum, s) => sum + s.dueTodayCount, // Directly use s.dueTodayCount
-    0
-  );
+  const totalDueToday = summaries.reduce((sum, s) => sum + s.dueTodayCount, 0);
   const totalOverdue = summaries.reduce(
     (sum, s) => sum + (s.overdueCount || 0),
     0
   );
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleTodosSelected = (newSelectedTodos) => {
+    setSelectedTodos(newSelectedTodos);
+  };
 
   return (
     <div className="p-6">
@@ -87,14 +105,25 @@ const HomeView = ({ priorities, setSelectedPriority, setView }) => {
           <span className="text-red-500 font-bold">{totalOverdue}</span>{" "}
           {totalOverdue === 1 ? "that is" : "that are"} overdue
         </h2>
+        <button
+          onClick={handleOpenModal}
+          className="text-blue-500 hover:text-blue-700 underline"
+        >
+          Select todos for today
+        </button>
       </div>
 
-      {/* Wrap the DailyCalendar in a div with consistent styling */}
       <div className="mt-8">
-        <DailyCalendar onTodoUpdate={handleTodoUpdate} />
+        <DailyCalendar onTodoUpdate={handleTodoUpdate} todos={selectedTodos} />
       </div>
+
+      <TodoSelectionModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onTodosSelected={handleTodosSelected}
+      />
     </div>
   );
 };
 
-export default HomeView;
+export default DailyPlanView;
