@@ -49,9 +49,12 @@ const DailyCalendar = ({
 
   const handleEventResize = async ({ event, start, end }) => {
     const updatedTodo = { ...event.resource, start_at: start.toISOString() };
-    const duration = moment
-      .duration(moment(end).diff(moment(start)))
-      .asMinutes();
+    const duration = Math.max(
+      15,
+      Math.round(
+        moment.duration(moment(end).diff(moment(start))).asMinutes() / 15
+      ) * 15
+    );
     await updateTodoStartAt(updatedTodo.id, updatedTodo.start_at);
     await updateTodoDuration(updatedTodo.id, duration);
     onTodoUpdate();
@@ -59,10 +62,12 @@ const DailyCalendar = ({
 
   const handleEventDrop = async ({ event, start, end }) => {
     const updatedTodo = { ...event.resource, start_at: start.toISOString() };
-
-    const duration = moment
-      .duration(moment(end).diff(moment(start)))
-      .asMinutes();
+    const duration = Math.max(
+      15,
+      Math.round(
+        moment.duration(moment(end).diff(moment(start))).asMinutes() / 15
+      ) * 15
+    );
     await updateTodoStartAt(updatedTodo.id, updatedTodo.start_at);
     await updateTodoDuration(updatedTodo.id, duration);
     onTodoUpdate();
@@ -113,7 +118,7 @@ const DailyCalendar = ({
           style={{ height: "100%" }}
           view="day"
           views={["day"]}
-          step={10}
+          step={30}
           timeslots={1}
           onSelectEvent={handleSelectEvent}
           onEventResize={handleEventResize}
@@ -127,7 +132,7 @@ const DailyCalendar = ({
           onNavigate={handleScroll}
           formats={{
             timeGutterFormat: (date, culture, localizer) =>
-              localizer.format(date, "HH:mm", culture),
+              localizer.format(date, "h:mm A", culture),
             dayFormat: () => "",
           }}
           toolbar={false}
