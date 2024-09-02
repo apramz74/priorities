@@ -4,8 +4,8 @@ import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import {
   toggleComplete,
-  updateTodoStartTime,
   updateTodoDuration,
+  updateTodoStartAt,
 } from "../utils/api";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
@@ -47,7 +47,7 @@ const DailyCalendar = ({ onTodoUpdate, todos }) => {
     const duration = moment
       .duration(moment(end).diff(moment(start)))
       .asMinutes();
-    await updateTodoStartTime(updatedTodo.id, updatedTodo.start_at);
+    await updateTodoStartAt(updatedTodo.id, updatedTodo.start_at);
     await updateTodoDuration(updatedTodo.id, duration);
     onTodoUpdate();
   };
@@ -57,7 +57,7 @@ const DailyCalendar = ({ onTodoUpdate, todos }) => {
     const duration = moment
       .duration(moment(end).diff(moment(start)))
       .asMinutes();
-    await updateTodoStartTime(updatedTodo.id, updatedTodo.start_at);
+    await updateTodoStartAt(updatedTodo.id, updatedTodo.start_at);
     await updateTodoDuration(updatedTodo.id, duration);
     onTodoUpdate();
   };
