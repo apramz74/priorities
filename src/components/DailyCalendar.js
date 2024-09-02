@@ -88,8 +88,8 @@ const DailyCalendar = ({
 
   return (
     <div className="daily-calendar w-full" style={{ height: "800px" }}>
-      <h2 className="text-xl font-semibold mb-3">Your day</h2>
-      <h2 className="text-md font-medium my-2">
+      <h2 className="text-xl font-semibold mb-2">Your day</h2>
+      <h2 className="text-md mt-1">
         You have{" "}
         <span className="text-indigo-deep font-bold">{totalDueToday}</span>{" "}
         {totalDueToday === 1 ? "todo" : "todos"} still due today and{" "}
@@ -98,9 +98,9 @@ const DailyCalendar = ({
       </h2>
       <button
         onClick={handleOpenModal}
-        className="text-blue-500 hover:text-blue-700 underline my-2"
+        className="text-indigo-deep text-sm text-medium hover:text-indigo-700 mb-4"
       >
-        Select todos for today
+        Select todos for today →
       </button>
       <div
         className="calendar-container bg-white rounded-lg shadow-sm"
