@@ -13,7 +13,13 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
   const [progressPercentage, setProgressPercentage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTodos, setSelectedTodos] = useState([]);
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
 
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
   const handleTodoUpdate = useCallback(async () => {
     const summaryData = await fetchPrioritySummary();
     setSummaries(summaryData);
@@ -51,7 +57,7 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
         const hours = Math.floor(remainingMinutes / 60);
         const minutes = Math.floor(remainingMinutes % 60);
 
-        setTimeLeft(`${hours}h ${minutes}m left in the workday`);
+        setTimeLeft(`${hours}h ${minutes}m  left in the workday`);
         setProgressPercentage((elapsedMinutes / totalMinutes) * 100);
       }
     };
@@ -67,14 +73,6 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
     (sum, s) => sum + (s.overdueCount || 0),
     0
   );
-
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
 
   return (
     <div className="p-6">
@@ -98,25 +96,15 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
             </span>
           </div>
         </div>
-        <h2 className="text-md font-medium my-3">
-          You have{" "}
-          <span className="text-indigo-deep font-bold">{totalDueToday}</span>{" "}
-          {totalDueToday === 1 ? "todo" : "todos"} still due today and{" "}
-          <span className="text-red-500 font-bold">{totalOverdue}</span>{" "}
-          {totalOverdue === 1 ? "that is" : "that are"} overdue
-        </h2>
-        <button
-          onClick={handleOpenModal}
-          className="text-blue-500 hover:text-blue-700 underline"
-        >
-          Select todos for today
-        </button>
       </div>
 
       <div className="mt-8">
         <DailyCalendar
           onTodoUpdate={handleTodoUpdate}
           selectedTodos={selectedTodos}
+          totalDueToday={totalDueToday} // Pass totalDueToday
+          totalOverdue={totalOverdue} // Pass totalOverdue
+          handleOpenModal={handleOpenModal}
         />
       </div>
 

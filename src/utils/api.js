@@ -283,7 +283,8 @@ export async function fetchTodosForToday() {
 }
 
 // Assigns start times and durations to selected todos
-export async function assignStartTimesAndDurations(todos) {
+export async function assignStartTimesAndDurations(todosInput) {
+  const todos = Array.isArray(todosInput) ? todosInput : [todosInput];
   const today = getTodayDate();
   let lastEndTime = null;
   const updatedTodos = [];
@@ -320,10 +321,13 @@ export async function assignStartTimesAndDurations(todos) {
     }
   }
 
-  return todos.map((todo) => {
+  const result = todos.map((todo) => {
     const updatedTodo = updatedTodos.find((t) => t.id === todo.id);
+
     return updatedTodo ? { ...updatedTodo, selected_for_today: true } : todo;
   });
+
+  return Array.isArray(todosInput) ? result : result[0];
 }
 
 // Updates the selected_for_today status of a todo
@@ -501,6 +505,6 @@ export async function ensureMiscellaneousPriority() {
 }
 
 // Returns today's date in 'YYYY-MM-DD' format
-function getTodayDate() {
-  return new Date().toLocaleDateString("en-CA");
+export function getTodayDate() {
+  return new Date().toISOString().split("T")[0];
 }

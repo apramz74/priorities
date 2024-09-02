@@ -13,7 +13,13 @@ import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 const localizer = momentLocalizer(moment);
 const DnDCalendar = withDragAndDrop(Calendar);
 
-const DailyCalendar = ({ onTodoUpdate, selectedTodos }) => {
+const DailyCalendar = ({
+  onTodoUpdate,
+  selectedTodos,
+  totalDueToday,
+  totalOverdue,
+  handleOpenModal,
+}) => {
   const [scrolledDate, setScrolledDate] = useState(new Date());
 
   const formatTodosForCalendar = useCallback((todos) => {
@@ -81,8 +87,21 @@ const DailyCalendar = ({ onTodoUpdate, selectedTodos }) => {
   }, []);
 
   return (
-    <div className="daily-calendar w-full" style={{ height: "600px" }}>
-      <h2 className="text-xl font-semibold mb-4">Your day</h2>
+    <div className="daily-calendar w-full" style={{ height: "800px" }}>
+      <h2 className="text-xl font-semibold mb-3">Your day</h2>
+      <h2 className="text-md font-medium my-2">
+        You have{" "}
+        <span className="text-indigo-deep font-bold">{totalDueToday}</span>{" "}
+        {totalDueToday === 1 ? "todo" : "todos"} still due today and{" "}
+        <span className="text-red-500 font-bold">{totalOverdue}</span>{" "}
+        {totalOverdue === 1 ? "that is" : "that are"} overdue
+      </h2>
+      <button
+        onClick={handleOpenModal}
+        className="text-blue-500 hover:text-blue-700 underline my-2"
+      >
+        Select todos for today
+      </button>
       <div
         className="calendar-container bg-white rounded-lg shadow-sm"
         style={{ height: "calc(100% - 40px)" }}
