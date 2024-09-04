@@ -265,11 +265,15 @@ export async function updateTodoDuration(id, duration) {
 // Fetches todos for today
 export async function fetchTodosForToday() {
   const today = getTodayDate();
+  const todayStart = `${today}T00:00:00`;
+  const todayEnd = `${today}T23:59:59`;
 
   const { data, error } = await supabase
     .from("todos")
     .select("*, priority:priorities(id, name, order)")
-    .eq("completed", false)
+    .or(
+      `completed.eq.false,and(completed.eq.true,completed_at.gte.${todayStart},completed_at.lt.${todayEnd}),selected_for_today.eq.true`
+    )
     .eq("deleted", false)
     .or(`due_date.lte.${today},due_date.gt.${today},selected_for_today.eq.true`)
     .order("priority(order)", { ascending: true })
