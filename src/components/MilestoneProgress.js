@@ -1,74 +1,27 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { updateMilestone, deleteMilestone, addMilestone } from "../utils/api";
-import PlusIcon from "./PlusIcon";
 import StandardModal from "./StandardModal";
-
-const EditableField = ({ value, onUpdate, type = "text", className = "" }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isEditing]);
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      setIsEditing(false);
-      onUpdate(editValue);
-    } else if (e.key === "Escape") {
-      setIsEditing(false);
-      setEditValue(value);
-    }
-  };
-
-  if (isEditing) {
-    return (
-      <input
-        ref={inputRef}
-        type={type}
-        value={editValue}
-        onChange={(e) => setEditValue(e.target.value)}
-        onBlur={() => {
-          setIsEditing(false);
-          onUpdate(editValue);
-        }}
-        onKeyDown={handleKeyDown}
-        className={`border rounded px-2 py-1 ${className}`}
-        style={{ color: "#1F2937" }}
-      />
-    );
-  }
-
-  return (
-    <div
-      onClick={() => setIsEditing(true)}
-      className={`cursor-pointer ${className}`}
-    >
-      {value}
-    </div>
-  );
-};
+import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 
 const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
   const sortedMilestones = [...milestones].sort(
     (a, b) => new Date(a.date) - new Date(b.date)
   );
-  const lastMilestone = sortedMilestones[sortedMilestones.length - 1];
   const [contextMenu, setContextMenu] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const calculateDaysLeft = (dueDate) => {
+  const calculateDaysLeft = () => {
     const today = new Date();
-    const due = new Date(dueDate);
-    const diffTime = due - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    const nextMilestone = sortedMilestones.find(
+      (m) => new Date(m.date) > today && m.status !== "completed"
+    );
+    if (!nextMilestone) return 0;
+
+    const diffTime = new Date(nextMilestone.date) - today;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  const daysLeft = lastMilestone ? calculateDaysLeft(lastMilestone.date) : 0;
+  const daysLeft = calculateDaysLeft();
 
   const getProjectStatus = () => {
     if (milestones.length === 0) {
@@ -80,7 +33,7 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
     }
     return {
       number: daysLeft,
-      text: "days left for this project",
+      text: "days until next milestone",
       isSpecial: false,
     };
   };
@@ -112,9 +65,11 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
 
   const handleContextMenu = (e, milestone) => {
     e.preventDefault();
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
     setContextMenu({
-      x: e.clientX,
-      y: e.clientY,
+      x: rect.right,
+      y: rect.bottom,
       milestone: milestone,
     });
   };
@@ -137,6 +92,11 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
     }
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+  };
+
   useEffect(() => {
     const handleClickOutside = () => setContextMenu(null);
     document.addEventListener("click", handleClickOutside);
@@ -145,126 +105,81 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
 
   return (
     <div className="mb-6">
-      <div className="flex items-center mb-2">
+      <div className="flex items-center mb-4">
         {projectStatus.isSpecial ? (
-          <div
-            className={`${
-              projectStatus.isSpecial
-                ? "text-xl font-bold font-inter"
-                : "text-3xl font-black"
-            } text-gray-800 mr-2`}
-            style={projectStatus.isSpecial ? { fontSize: "15px" } : {}}
-          >
-            <h3 className="text-xl font-bold font-inter">
-              {projectStatus.text}
-            </h3>
-          </div>
+          <h3 className="text-xl font-bold font-inter text-gray-800">
+            {projectStatus.text}
+          </h3>
         ) : (
           <div className="flex items-baseline">
             <span className="text-3xl font-black text-indigo-deep mr-2">
               {projectStatus.number}
             </span>
-            <span
-              className="font-inter font-semibold text-gray-800"
-              style={{ fontSize: "15px" }}
-            >
+            <span className="font-inter font-semibold text-gray-800 text-sm">
               {projectStatus.text}
             </span>
           </div>
         )}
       </div>
-      {milestones.length === 0 ? (
-        <div className="flex rounded-lg overflow-hidden border-2 border-indigo-300 w-fit">
-          <div
-            className="h-20 bg-white flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-all duration-200 group px-6"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <PlusIcon className="w-6 h-6 text-indigo-700 group-hover:text-indigo-800" />
-            <span className="text-sm font-medium text-indigo-700 group-hover:text-indigo-800 mt-1">
-              Add milestone
-            </span>
-          </div>
-        </div>
-      ) : (
-        <div className="flex rounded-lg overflow-hidden border-2 border-indigo-300">
-          {sortedMilestones.map((milestone, index) => (
+      <div className="flex flex-col space-y-2">
+        {sortedMilestones.map((milestone, index) => (
+          <div key={milestone.id} className="relative">
             <div
-              key={milestone.id}
-              className={`flex-grow h-20 max-w-xl ${
+              className={`h-2 w-full ${
                 milestone.status === "completed"
-                  ? "bg-indigo-300"
+                  ? "bg-indigo-deep"
                   : "bg-indigo-100"
-              } flex flex-col items-center justify-center ${
-                index !== sortedMilestones.length - 1
-                  ? "border-r-2 border-gray-200"
-                  : ""
-              }`}
-              onContextMenu={(e) => handleContextMenu(e, milestone)}
-            >
-              <div
-                className={`font-semibold flex items-center ${
-                  milestone.status === "completed"
-                    ? "text-indigo-600"
-                    : "text-gray-800"
-                }`}
-              >
-                {milestone.status === "completed" && (
-                  <svg
-                    className="w-4 h-4 mr-1"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                )}
-                M{index + 1}
+              } rounded-sm`}
+            ></div>
+            <div className="flex justify-between items-center mt-1">
+              <div className="flex items-center">
+                <span className="text-sm font-semibold text-gray-600 mr-2">
+                  M{index + 1}
+                </span>
+                <span
+                  className={`text-sm ${
+                    milestone.status === "completed"
+                      ? "text-gray-400 line-through"
+                      : "text-gray-800"
+                  }`}
+                >
+                  {milestone.title}
+                </span>
               </div>
-              <EditableField
-                value={milestone.title}
-                onUpdate={(value) =>
-                  handleUpdateMilestone(milestone, "title", value)
-                }
-                className={`text-xs mt-1 font-inter font-normal text-center ${
-                  milestone.status === "completed"
-                    ? "text-indigo-600"
-                    : "text-gray-800"
-                }`}
-              />
-              <EditableField
-                value={milestone.date}
-                onUpdate={(value) =>
-                  handleUpdateMilestone(milestone, "date", value)
-                }
-                type="date"
-                className={`text-xs mt-1 font-inter font-normal text-center ${
-                  milestone.status === "completed"
-                    ? "text-indigo-600"
-                    : "text-gray-800"
-                }`}
-              />
+              <div className="flex items-center">
+                <span
+                  className={`text-sm ${
+                    milestone.status === "completed"
+                      ? "text-gray-400 line-through"
+                      : "text-gray-600"
+                  }`}
+                >
+                  {formatDate(milestone.date)}
+                </span>
+                <button
+                  className="ml-2 text-gray-400 hover:text-gray-600 relative"
+                  onClick={(e) => handleContextMenu(e, milestone)}
+                >
+                  <EllipsisVerticalIcon className="h-5 w-5" />
+                </button>
+              </div>
             </div>
-          ))}
-          <div
-            className="flex-grow h-20 max-w-xs bg-white flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-all duration-200 group"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <PlusIcon className="w-6 h-6 text-indigo-700 group-hover:text-indigo-800" />
-            <span className="text-sm font-medium text-indigo-700 group-hover:text-indigo-800 mt-1">
-              Add milestone
-            </span>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
+      <button
+        className="mt-4 text-indigo-deep text-sm font-medium hover:text-indigo-700 flex items-center"
+        onClick={() => setIsModalOpen(true)}
+      >
+        Add milestone →
+      </button>
       {contextMenu && (
         <div
-          className="context-menu fixed z-50"
+          className="context-menu fixed z-50 bg-white shadow-lg rounded-md py-1"
           style={{
-            top: contextMenu.y,
-            left: contextMenu.x,
+            top: `${contextMenu.y}px`,
+            left: `${contextMenu.x}px`,
+            transform: "translate(0, 8px)",
           }}
         >
           {contextMenu.milestone.status === "completed" ? (
