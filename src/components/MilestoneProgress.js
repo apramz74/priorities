@@ -121,54 +121,64 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
           </div>
         )}
       </div>
-      <div className="flex flex-col space-y-2">
+      <div className="flex items-start space-x-1 mb-4">
         {sortedMilestones.map((milestone, index) => (
-          <div key={milestone.id} className="relative">
-            <div
-              className={`h-2 w-full ${
-                milestone.status === "completed"
-                  ? "bg-indigo-deep"
-                  : "bg-indigo-100"
-              } rounded-sm`}
-            ></div>
-            <div className="flex justify-between items-center mt-1">
-              <div className="flex items-center">
-                <span className="text-sm font-semibold text-gray-600 mr-2">
-                  M{index + 1}
-                </span>
-                <span
-                  className={`text-sm ${
-                    milestone.status === "completed"
-                      ? "text-gray-400 line-through"
-                      : "text-gray-800"
-                  }`}
-                >
-                  {milestone.title}
-                </span>
-              </div>
-              <div className="flex items-center">
-                <span
-                  className={`text-sm ${
-                    milestone.status === "completed"
-                      ? "text-gray-400 line-through"
-                      : "text-gray-600"
-                  }`}
-                >
-                  {formatDate(milestone.date)}
-                </span>
+          <div key={milestone.id} className="flex-1">
+            <div className="relative">
+              <div
+                className={`h-2 w-full ${
+                  milestone.status === "completed"
+                    ? "bg-indigo-deep"
+                    : "bg-indigo-100"
+                } ${index === 0 ? "rounded-l-md" : ""} ${
+                  index === sortedMilestones.length - 1 ? "rounded-r-md" : ""
+                }`}
+              ></div>
+              <div className="absolute -bottom-6 left-0 w-full flex justify-between items-center text-xs">
+                <div className="flex items-center space-x-2">
+                  <span
+                    className={`font-semibold ${
+                      milestone.status === "completed"
+                        ? "text-gray-400 line-through"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    M{index + 1}
+                  </span>
+                  <span
+                    className={`${
+                      milestone.status === "completed"
+                        ? "text-gray-400 line-through"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    {formatDate(milestone.date)}
+                  </span>
+                </div>
                 <button
-                  className="ml-2 text-gray-400 hover:text-gray-600 relative"
+                  className="text-gray-400 hover:text-gray-600"
                   onClick={(e) => handleContextMenu(e, milestone)}
                 >
-                  <EllipsisVerticalIcon className="h-5 w-5" />
+                  <EllipsisVerticalIcon className="h-4 w-4" />
                 </button>
               </div>
+            </div>
+            <div className="mt-6">
+              <span
+                className={`text-sm ${
+                  milestone.status === "completed"
+                    ? "text-gray-400 line-through"
+                    : "text-gray-800"
+                }`}
+              >
+                {milestone.title}
+              </span>
             </div>
           </div>
         ))}
       </div>
       <button
-        className="mt-4 text-indigo-deep text-sm font-medium hover:text-indigo-700 flex items-center"
+        className="mt-1 text-indigo-deep text-sm font-medium hover:text-indigo-700 flex items-center"
         onClick={() => setIsModalOpen(true)}
       >
         Add milestone →
