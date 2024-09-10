@@ -22,7 +22,7 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
   };
 
   const daysLeft = calculateDaysLeft();
-
+  console.log(milestones);
   const getProjectStatus = () => {
     if (milestones.length === 0) {
       return { text: "Start planning your project", isSpecial: true };
@@ -33,7 +33,10 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
     }
     return {
       number: daysLeft,
-      text: "days until next milestone",
+      text:
+        daysLeft === 1
+          ? "day until next milestone"
+          : "days until next milestone",
       isSpecial: false,
     };
   };
@@ -97,6 +100,13 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
     return date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
   };
 
+  const getCurrentMilestone = () => {
+    const today = new Date();
+    return sortedMilestones.find(
+      (m) => new Date(m.date) >= today && m.status !== "completed"
+    );
+  };
+
   useEffect(() => {
     const handleClickOutside = () => setContextMenu(null);
     document.addEventListener("click", handleClickOutside);
@@ -121,7 +131,7 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
           </div>
         )}
       </div>
-      <div className="flex items-start space-x-1 mb-4">
+      <div className="flex items-start space-x-1 mb-2">
         {sortedMilestones.map((milestone, index) => (
           <div key={milestone.id} className="flex-1">
             <div className="relative">
@@ -135,24 +145,35 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
                 }`}
               ></div>
               <div className="absolute -bottom-6 left-0 w-full flex justify-between items-center text-xs">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
                   <span
-                    className={`font-semibold ${
+                    className={`font-medium  ${
                       milestone.status === "completed"
                         ? "text-gray-400 line-through"
                         : "text-gray-600"
+                    } ${
+                      milestone === getCurrentMilestone() &&
+                      "text-indigo-deep font-bold"
                     }`}
                   >
                     M{index + 1}
                   </span>
                   <span
-                    className={`${
+                    className={`font-medium ${
                       milestone.status === "completed"
                         ? "text-gray-400 line-through"
                         : "text-gray-600"
+                    } ${
+                      milestone === getCurrentMilestone() &&
+                      "text-indigo-deep font-bold"
                     }`}
                   >
                     {formatDate(milestone.date)}
+                  </span>
+                  <span>
+                    {milestone.status === "completed" && (
+                      <span className="text-indigo-deep font-bold">✓</span>
+                    )}
                   </span>
                 </div>
                 <button
@@ -163,9 +184,9 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
                 </button>
               </div>
             </div>
-            <div className="mt-6">
+            <div className="mt-5">
               <span
-                className={`text-sm ${
+                className={`text-xs ${
                   milestone.status === "completed"
                     ? "text-gray-400 line-through"
                     : "text-gray-800"
@@ -178,7 +199,7 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
         ))}
       </div>
       <button
-        className="mt-1 text-indigo-deep text-sm font-medium hover:text-indigo-700 flex items-center"
+        className="text-indigo-deep text-sm font-medium hover:text-indigo-700 flex items-center"
         onClick={() => setIsModalOpen(true)}
       >
         Add milestone →
