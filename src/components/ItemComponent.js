@@ -2,7 +2,19 @@ import React, { useState, useRef, useEffect } from "react";
 import TrashIcon from "./TrashIcon";
 import { ReactComponent as CalendarIcon } from "../components/calendar_icon.svg";
 
-const EditableField = ({ value, onUpdate, type = "text", className = "" }) => {
+// Add this helper function at the top of the file
+const formatDate = (dateString) => {
+  const options = { month: "long", day: "numeric" };
+  return new Date(dateString).toLocaleDateString("en-US", options);
+};
+
+const EditableField = ({
+  value,
+  onUpdate,
+  type = "text",
+  className = "",
+  isDate = false,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const inputRef = useRef(null);
@@ -47,7 +59,7 @@ const EditableField = ({ value, onUpdate, type = "text", className = "" }) => {
       onClick={() => setIsEditing(true)}
       className={`cursor-pointer ${className}`}
     >
-      {value}
+      {isDate ? formatDate(value) : value}
     </div>
   );
 };
@@ -68,8 +80,7 @@ const ItemComponent = ({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Create date object and set to start of day in local time
-    const dueDateObj = new Date(dueDate + "T00:00:00");
+    const dueDateObj = new Date(dueDate);
 
     // Compare year, month, and day
     const isToday =
@@ -153,6 +164,7 @@ const ItemComponent = ({
           }}
           type="date"
           className="text-xs w-full pl-6"
+          isDate={true}
         />
       </div>
       {contextMenu && (
