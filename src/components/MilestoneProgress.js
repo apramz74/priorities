@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { updateMilestone, deleteMilestone, addMilestone } from "../utils/api";
 import StandardModal from "./StandardModal";
 import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 
 const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
-  const sortedMilestones = [...milestones].sort(
-    (a, b) => new Date(a.date) - new Date(b.date)
+  const sortedMilestones = useMemo(
+    () => [...milestones].sort((a, b) => new Date(a.date) - new Date(b.date)),
+    [milestones]
   );
   const [contextMenu, setContextMenu] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingMilestone, setEditingMilestone] = useState(null);
 
   const calculateDaysLeft = () => {
     const today = new Date();
@@ -81,6 +83,7 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
     if (data.title && data.date && selectedPriority) {
       const newMilestone = await addMilestone({
         ...data,
+        date: new Date(data.date + "T00:00:00Z").toISOString().split("T")[0], // Ensure UTC date
         status: "not started",
         priority_id: selectedPriority.id,
       });
@@ -95,9 +98,40 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
     }
   };
 
+  const handleEditMilestone = async (data) => {
+    if (data.title && data.date && editingMilestone) {
+      const updatedMilestone = {
+        ...editingMilestone,
+        title: data.title,
+        date: new Date(data.date + "T00:00:00Z").toISOString().split("T")[0], // Ensure UTC date
+      };
+      const success = await updateMilestone(updatedMilestone);
+      if (success) {
+        setMilestones((prevMilestones) =>
+          prevMilestones.map((m) =>
+            m.id === updatedMilestone.id ? updatedMilestone : m
+          )
+        );
+        setIsModalOpen(false);
+        setEditingMilestone(null);
+      } else {
+        console.error("Failed to update milestone");
+      }
+    }
+  };
+
+  const openEditModal = (milestone) => {
+    setEditingMilestone(milestone);
+    setIsModalOpen(true);
+  };
+
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+    const date = new Date(dateString + "T00:00:00"); // Add time to ensure correct date
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      timeZone: "UTC", // Ensure the date is interpreted as UTC
+    });
   };
 
   const getCurrentMilestone = () => {
@@ -115,7 +149,7 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
 
   return (
     <div className="mb-6">
-      <div className="flex items-center mb-4">
+      <div className="flex items-center mb-3">
         {projectStatus.isSpecial ? (
           <h3 className="text-xl font-bold font-inter text-gray-800">
             {projectStatus.text}
@@ -213,6 +247,29 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
             transform: "translate(0, 8px)",
           }}
         >
+          <button
+            className="context-menu-item"
+            onClick={() => {
+              openEditModal(contextMenu.milestone);
+              setContextMenu(null);
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Edit
+          </button>
           {contextMenu.milestone.status === "completed" ? (
             <button
               className="context-menu-item"
@@ -299,9 +356,12 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
       )}
       <StandardModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleAddMilestone}
-        title="Add New Milestone"
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingMilestone(null);
+        }}
+        onSubmit={editingMilestone ? handleEditMilestone : handleAddMilestone}
+        title={editingMilestone ? "Edit Milestone" : "Add New Milestone"}
         fields={[
           {
             name: "title",
@@ -309,12 +369,16 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
             type: "text",
             required: true,
             placeholder: "Enter milestone title",
+            defaultValue: editingMilestone ? editingMilestone.title : "",
           },
           {
             name: "date",
             label: "Date",
             type: "date",
             required: true,
+            defaultValue: editingMilestone
+              ? editingMilestone.date.split("T")[0]
+              : "",
           },
         ]}
       />
