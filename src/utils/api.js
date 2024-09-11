@@ -534,3 +534,18 @@ export async function ensureMiscellaneousPriority() {
 export function getTodayDate() {
   return new Date().toISOString().split("T")[0];
 }
+
+// Clears all todos selected for today
+export async function clearAllSelectedForToday() {
+  const { error } = await supabase
+    .from("todos")
+    .update({ selected_for_today: false, start_at: null })
+    .eq("selected_for_today", true);
+
+  if (error) {
+    console.error("Error clearing todos selected for today:", error);
+    return false;
+  }
+
+  return true;
+}

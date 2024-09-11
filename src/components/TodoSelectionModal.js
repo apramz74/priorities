@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   updateTodoSelectedForToday,
   assignStartTimesAndDurations,
+  clearAllSelectedForToday, // Add this import
 } from "../utils/api";
 
 const TodoSelectionModal = ({
@@ -139,6 +140,19 @@ const TodoSelectionModal = ({
     return `${selectedCount}/${totalCount}`;
   };
 
+  const handleClearAllSelected = async () => {
+    const success = await clearAllSelectedForToday();
+    if (success) {
+      setSelectedTodos([]);
+      setTodos((prevTodos) =>
+        prevTodos.map((todo) => ({ ...todo, selected_for_today: false }))
+      );
+      onTodoUpdate(); // Trigger update in parent component
+    }
+  };
+
+  const hasSelectedTodos = selectedTodos.length > 0;
+
   return (
     <div
       className={`fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 ${
@@ -147,21 +161,52 @@ const TodoSelectionModal = ({
     >
       <div className="gradient-background rounded-lg shadow-xl w-full max-w-xl mt-20">
         <div className="modal-content bg-white m-2 p-6 rounded-lg relative max-h-[calc(100vh-10rem)] overflow-y-auto">
-          <h3 className="text-xl font-bold mb-4">
-            What are you working on today?
-          </h3>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-xl font-bold">
+              What are you working on today?
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {hasSelectedTodos && (
+            <button
+              onClick={handleClearAllSelected}
+              className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center mb-2"
+            >
+              Clear all selections →
+            </button>
+          )}
+
           <div className="flex border-b mb-4">
             {Object.keys(tabContent).map((tab) => (
               <button
                 key={tab}
-                className={`py-1 px-4 flex items-center ${
+                className={`py-2 px-4 flex items-center ${
                   activeTab === tab
-                    ? "border-b-2 border-indigo-500 text-indigo-700 font-semibold text-sm"
-                    : "text-gray-500 text-sm"
+                    ? "border-b-2 border-indigo-500 text-indigo-700 font-semibold"
+                    : "text-gray-500"
                 }`}
                 onClick={() => setActiveTab(tab)}
               >
-                <span className="mr-2">
+                <span className="mr-2 text-sm">
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </span>
                 <span className="text-xs bg-gray-200 rounded-full px-2 py-1">
@@ -170,26 +215,8 @@ const TodoSelectionModal = ({
               </button>
             ))}
           </div>
+
           {renderTodoList(tabContent[activeTab])}
-          <button
-            onClick={onClose}
-            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </div>
       </div>
     </div>
