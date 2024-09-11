@@ -35,10 +35,7 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
     }
     return {
       number: daysLeft,
-      text:
-        daysLeft === 1
-          ? "day until next milestone"
-          : "days until next milestone",
+      text: daysLeft === 1 ? "day left in milestone" : "days left in milestone",
       isSpecial: false,
     };
   };
@@ -202,7 +199,7 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
                       "text-indigo-deep font-bold"
                     }`}
                   >
-                    {formatDate(milestone.date)}
+                    by {formatDate(milestone.date)}
                   </span>
                   <span>
                     {milestone.status === "completed" && (
@@ -293,11 +290,8 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <polyline points="3 10 3 4 21 4 21 10"></polyline>
-                <line x1="3" y1="20" x2="21" y2="20"></line>
-                <line x1="7" y1="20" x2="7" y2="10"></line>
-                <line x1="17" y1="20" x2="17" y2="10"></line>
-                <line x1="12" y1="20" x2="12" y2="10"></line>
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
               </svg>
               Mark as incomplete
             </button>

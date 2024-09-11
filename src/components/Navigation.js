@@ -129,7 +129,7 @@ const Navigation = ({
               : "text-gray-600 hover:bg-gray-100"
           }`}
         >
-          <WeeklyReportIcon className="w-5 h-5 mr-7" />
+          <WeeklyReportIcon className="w-5 h-5 mr-7 fill-current" />
           <span className="font-medium">Weekly Report</span>
         </button>
 
