@@ -2,10 +2,13 @@ import React, { useState, useRef, useEffect } from "react";
 import TrashIcon from "./TrashIcon";
 import { ReactComponent as CalendarIcon } from "../components/calendar_icon.svg";
 
-// Add this helper function at the top of the file
+// Update this helper function at the top of the file
 const formatDate = (dateString) => {
-  const options = { month: "long", day: "numeric" };
-  return new Date(dateString).toLocaleDateString("en-US", options);
+  const options = { month: "long", day: "numeric", timeZone: "UTC" };
+  return new Date(dateString + "T00:00:00Z").toLocaleDateString(
+    "en-US",
+    options
+  );
 };
 
 const EditableField = ({
@@ -79,9 +82,10 @@ const ItemComponent = ({
   const getDueDateColor = (dueDate) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    const dueDateObj = new Date(dueDate);
-
+    console.log("Due Date: " + dueDate);
+    const [year, month, day] = dueDate.split("-").map(Number);
+    const dueDateObj = new Date(year, month - 1, day);
+    dueDateObj.setHours(0, 0, 0, 0);
     // Compare year, month, and day
     const isToday =
       today.getFullYear() === dueDateObj.getFullYear() &&
@@ -89,7 +93,9 @@ const ItemComponent = ({
       today.getDate() === dueDateObj.getDate();
 
     const isPast = dueDateObj < today;
-
+    console.log(item.name);
+    console.log("dueDateObj: " + dueDateObj);
+    console.log("today: " + today);
     if (isPast && !isToday) {
       return "#FF0000"; // Red for past due dates
     } else if (isToday) {
