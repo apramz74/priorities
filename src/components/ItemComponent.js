@@ -82,24 +82,23 @@ const ItemComponent = ({
   const getDueDateColor = (dueDate) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    console.log("Due Date: " + dueDate);
-    const [year, month, day] = dueDate.split("-").map(Number);
-    const dueDateObj = new Date(year, month - 1, day);
-    dueDateObj.setHours(0, 0, 0, 0);
-    // Compare year, month, and day
-    const isToday =
-      today.getFullYear() === dueDateObj.getFullYear() &&
-      today.getMonth() === dueDateObj.getMonth() &&
-      today.getDate() === dueDateObj.getDate();
 
-    const isPast = dueDateObj < today;
-    console.log(item.name);
-    console.log("dueDateObj: " + dueDateObj);
-    console.log("today: " + today);
-    if (isPast && !isToday) {
-      return "#FF0000"; // Red for past due dates
-    } else if (isToday) {
+    // Ensure we're working with UTC dates
+    const dueDateObj = new Date(dueDate + "T00:00:00Z");
+    const todayUTC = new Date(today.toUTCString());
+
+    // Compare year, month, and day in UTC
+    const isToday =
+      todayUTC.getUTCFullYear() === dueDateObj.getUTCFullYear() &&
+      todayUTC.getUTCMonth() === dueDateObj.getUTCMonth() &&
+      todayUTC.getUTCDate() === dueDateObj.getUTCDate();
+
+    const isPast = dueDateObj < todayUTC;
+
+    if (isToday) {
       return "#FFA800"; // Orange for today
+    } else if (isPast) {
+      return "#FF0000"; // Red for past due dates
     }
     return "currentColor"; // Default color for future dates
   };
@@ -175,15 +174,15 @@ const ItemComponent = ({
       </div>
       {contextMenu && (
         <div
-          className="fixed bg-white border border-gray-200 rounded-lg shadow-md py-2"
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-md py-1" // Reduced vertical padding
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           <button
-            className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600 font-semibold font-inter"
+            className="context-menu-item text-red-600 font-semibold font-inter"
             onClick={handleDelete}
           >
-            <TrashIcon className="w-4 h-4 mr-2" />
-            Delete
+            <TrashIcon className="w-3.5 h-3.5 mr-2" /> {/* Reduced icon size */}
+            <span className="flex-grow">Delete</span>
           </button>
         </div>
       )}

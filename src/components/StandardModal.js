@@ -41,6 +41,7 @@ const StandardModal = ({ isOpen, onClose, onSubmit, title, fields }) => {
                     placeholder={field.placeholder}
                     rows={4}
                     ref={index === 0 ? firstInputRef : null}
+                    defaultValue={field.defaultValue}
                   />
                 ) : (
                   <input
@@ -51,6 +52,7 @@ const StandardModal = ({ isOpen, onClose, onSubmit, title, fields }) => {
                     className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder={field.placeholder}
                     ref={index === 0 ? firstInputRef : null}
+                    defaultValue={field.defaultValue}
                   />
                 )}
               </div>
@@ -60,7 +62,7 @@ const StandardModal = ({ isOpen, onClose, onSubmit, title, fields }) => {
                 type="submit"
                 className="bg-indigo-deep text-white px-4 py-2 rounded font-semibold text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                Add
+                {title.startsWith("Edit") ? "Update" : "Add"}
               </button>
               <button
                 type="button"
