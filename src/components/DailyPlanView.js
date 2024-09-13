@@ -76,12 +76,18 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
       <div className="mb-6">
         <h1 className="text-3xl font-black mb-8">Daily Plan</h1>
         <h2 className="text-xl font-medium mb-2">
-          <span className="text-indigo-deep font-bold">
-            {timeLeft.split(" ")[0]} {timeLeft.split(" ")[1]}
-          </span>
-          <span className="text-base">
-            {timeLeft.split(" ").slice(2).join(" ")}
-          </span>
+          {timeLeft.includes("left in the workday") ? (
+            <>
+              <span className="text-indigo-deep font-bold">
+                {timeLeft.split(" ")[0]} {timeLeft.split(" ")[1]}
+              </span>
+              <span className="text-base">
+                {timeLeft.split(" ").slice(2).join(" ")}
+              </span>
+            </>
+          ) : (
+            <span className="text-black font-bold">{timeLeft}</span>
+          )}
         </h2>
         <div className="w-full bg-white border-2 border-indigo-deep rounded-lg h-10 mb-2 overflow-hidden">
           <div
