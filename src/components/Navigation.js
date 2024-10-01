@@ -109,7 +109,7 @@ const Navigation = ({
       </div>
 
       <div className="h-[calc(100vh-200px)] overflow-y-auto">
-        <h3 className="text-sm font-semibold text-gray-600 mb-2">PLANNING</h3>
+        <h3 className="text-md font-semibold text-gray-600 mb-2">Planning</h3>
         <button
           onClick={() => onSelectView({ type: "dailyPlan" })}
           className={`w-full text-left py-2 px-4 rounded flex items-center text-sm mb-2 ${
@@ -133,8 +133,8 @@ const Navigation = ({
           <span className="font-medium">Weekly Report</span>
         </button>
 
-        <h3 className="text-sm font-semibold text-gray-600 mb-2 mt-6">
-          PRIORITIES
+        <h3 className="text-md font-semibold text-gray-600 mb-2 mt-6">
+          Priorities
         </h3>
         <DragDropContext onDragEnd={handleDragEnd}>
           <StrictModeDroppable droppableId="priorities">
@@ -144,7 +144,7 @@ const Navigation = ({
                 ref={provided.innerRef}
                 className="space-y-1 mb-1"
               >
-                {[...Array(5)].map((_, index) => {
+                {[...Array(10)].map((_, index) => {
                   const priority = activePriorities[index];
                   return (
                     <Draggable
@@ -220,7 +220,7 @@ const Navigation = ({
           <span className="font-medium">Miscellaneous</span>
         </button>
 
-        <h3 className="text-sm font-semibold text-gray-600 mb-2 mt-6">
+        <h3 className="text-md font-semibold text-gray-600 mb-2 mt-6">
           History
         </h3>
         <ul className="space-y-1">

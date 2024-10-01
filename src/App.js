@@ -40,7 +40,10 @@ const PriorityManagementTool = () => {
         const completedPriorities = prevPriorities.filter((p) => p.completed);
         const updatedActivePriorities = [...activePriorities];
         updatedActivePriorities.splice(slot, 0, newPriority);
-        return [...updatedActivePriorities.slice(0, 5), ...completedPriorities];
+        return [
+          ...updatedActivePriorities.slice(0, 10),
+          ...completedPriorities,
+        ];
       });
       setActiveView({ type: "priority", priority: newPriority });
     }
