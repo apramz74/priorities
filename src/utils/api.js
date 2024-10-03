@@ -549,3 +549,41 @@ export async function clearAllSelectedForToday() {
 
   return true;
 }
+
+export const fetchNotes = async (priorityId) => {
+  const { data, error } = await supabase
+    .from("priority_notes")
+    .select("*")
+    .eq("priority_id", priorityId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
+export const addNote = async (priorityId, content) => {
+  const { data, error } = await supabase
+    .from("priority_notes")
+    .insert({ priority_id: priorityId, content })
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const updateNote = async (id, content) => {
+  const { data, error } = await supabase
+    .from("priority_notes")
+    .update({ content, updated_at: new Date() })
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const deleteNote = async (id) => {
+  const { error } = await supabase.from("priority_notes").delete().eq("id", id);
+
+  if (error) throw error;
+};

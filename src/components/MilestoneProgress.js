@@ -24,7 +24,7 @@ const MilestoneProgress = ({ milestones, setMilestones, selectedPriority }) => {
   };
 
   const daysLeft = calculateDaysLeft();
-  console.log(milestones);
+
   const getProjectStatus = () => {
     if (milestones.length === 0) {
       return { text: "Start planning your project", isSpecial: true };

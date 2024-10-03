@@ -11,16 +11,18 @@ import {
   fetchDependencies,
   getNewOrderForReopenedPriority,
 } from "../utils/api";
+import NotesView from "./NotesView";
 
 const PriorityView = ({
   selectedPriority,
   updatePriorities,
-  setView,
+  setActiveView,
   activePrioritiesCount,
 }) => {
   const [todos, setTodos] = useState([]);
   const [milestones, setMilestones] = useState([]);
   const [dependencies, setDependencies] = useState([]);
+  const [activeTab, setActiveTab] = useState("details");
 
   useEffect(() => {
     if (selectedPriority) {
@@ -152,9 +154,9 @@ const PriorityView = ({
   };
 
   return (
-    <div className="flex-grow relative">
+    <div>
       <div className="p-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center">
           <div className="flex items-center justify-between mb-4">
             <EditableField
               value={selectedPriority.name}
@@ -162,6 +164,7 @@ const PriorityView = ({
               className="text-3xl font-black"
             />
           </div>
+
           {selectedPriority.completed ? (
             <button
               onClick={handleReopenPriority}
@@ -192,25 +195,52 @@ const PriorityView = ({
             </button>
           )}
         </div>
-
-        <MilestoneProgress
-          milestones={milestones}
-          setMilestones={setMilestones}
-          selectedPriority={selectedPriority}
-        />
-
-        <div className="space-y-6 w-full">
-          <TodoSection
-            todos={todos}
-            setTodos={setTodos}
-            priorityId={selectedPriority.id}
-          />
-          <DependencySection
-            dependencies={dependencies}
-            setDependencies={setDependencies}
-            priorityId={selectedPriority.id}
-          />
+        <div className="mb-4">
+          <div className="flex border-b">
+            <button
+              className={`py-2 px-4 ${
+                activeTab === "details"
+                  ? "border-b-2 border-blue-500 text-blue-500"
+                  : "text-gray-500"
+              }`}
+              onClick={() => setActiveTab("details")}
+            >
+              Details
+            </button>
+            <button
+              className={`py-2 px-4 ${
+                activeTab === "notes"
+                  ? "border-b-2 border-blue-500 text-blue-500"
+                  : "text-gray-500"
+              }`}
+              onClick={() => setActiveTab("notes")}
+            >
+              Notes
+            </button>
+          </div>
         </div>
+
+        {activeTab === "details" ? (
+          <div className="space-y-6 w-full">
+            <MilestoneProgress
+              milestones={milestones}
+              setMilestones={setMilestones}
+              selectedPriority={selectedPriority}
+            />
+            <TodoSection
+              todos={todos}
+              setTodos={setTodos}
+              priorityId={selectedPriority.id}
+            />
+            <DependencySection
+              dependencies={dependencies}
+              setDependencies={setDependencies}
+              priorityId={selectedPriority.id}
+            />
+          </div>
+        ) : (
+          <NotesView priorityId={selectedPriority.id} />
+        )}
       </div>
     </div>
   );
