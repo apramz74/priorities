@@ -24,7 +24,6 @@ const NotesView = ({ priorityId }) => {
       }
     } catch (error) {
       console.error("Failed to add note:", error);
-      // Optionally, show an error message to the user
     }
     setIsModalOpen(false);
   };
@@ -39,7 +38,6 @@ const NotesView = ({ priorityId }) => {
       }
     } catch (error) {
       console.error("Failed to update note:", error);
-      // Optionally, show an error message to the user
     }
     setIsModalOpen(false);
     setEditingNote(null);
@@ -50,53 +48,69 @@ const NotesView = ({ priorityId }) => {
     setNotes(notes.filter((note) => note.id !== id));
   };
 
+  const formatDate = (dateString) => {
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    return new Date(dateString).toLocaleDateString("en-US", options);
+  };
+
+  const getDateDescriptor = (note) => {
+    if (note.updated_at && note.updated_at !== note.created_at) {
+      return `Updated ${formatDate(note.updated_at)}`;
+    }
+    return `Added ${formatDate(note.created_at)}`;
+  };
+
   return (
     <div>
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="text-indigo-deep text-sm font-medium hover:text-indigo-700 flex items-center mb-4"
+      >
+        Add note →
+      </button>
       {notes.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-500 mb-4">
             No notes yet. Add your first note!
           </p>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Add Note
-          </button>
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-3 gap-4">
-            {notes.map((note) => (
-              <div key={note.id} className="bg-gray-100 p-4 rounded">
-                <p className="mb-2">{note.content}</p>
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => {
-                      setEditingNote(note);
-                      setIsModalOpen(true);
-                    }}
-                    className="text-blue-500 mr-2"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteNote(note.id)}
-                    className="text-red-500"
-                  >
-                    Delete
-                  </button>
+        <div className="space-y-4">
+          {notes.map((note) => (
+            <div
+              key={note.id}
+              className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm"
+            >
+              <div className="p-4">
+                <p className="mb-1 text-gray-800">{note.content}</p>
+              </div>
+              <div className="border-t border-gray-200">
+                <div className="flex justify-between items-center text-sm p-4">
+                  <span className="text-gray-500">
+                    {getDateDescriptor(note)}
+                  </span>
+                  <div>
+                    <button
+                      onClick={() => {
+                        setEditingNote(note);
+                        setIsModalOpen(true);
+                      }}
+                      className="text-indigo-600 hover:text-indigo-800 mr-3"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteNote(note.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Add Note
-          </button>
-        </>
+            </div>
+          ))}
+        </div>
       )}
       <NotesModal
         isOpen={isModalOpen}
@@ -105,7 +119,7 @@ const NotesView = ({ priorityId }) => {
           setEditingNote(null);
         }}
         onSubmit={editingNote ? handleEditNote : handleAddNote}
-        initialContent={"test" || ""}
+        initialContent={editingNote?.content || ""}
         noteId={editingNote?.id}
       />
     </div>
