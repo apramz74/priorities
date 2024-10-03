@@ -195,23 +195,23 @@ const PriorityView = ({
             </button>
           )}
         </div>
-        <div className="mb-4">
-          <div className="flex border-b">
+        <div className="mb-6">
+          <div className="flex space-x-2">
             <button
-              className={`py-2 px-4 ${
+              className={`py-2 px-6 rounded-md text-sm ${
                 activeTab === "details"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500"
+                  ? "bg-indigo-100 text-indigo-700 font-semibold border border-indigo-700"
+                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-300"
               }`}
               onClick={() => setActiveTab("details")}
             >
-              Details
+              Plan
             </button>
             <button
-              className={`py-2 px-4 ${
+              className={`py-2 px-6 rounded-md text-sm ${
                 activeTab === "notes"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500"
+                  ? "bg-indigo-100 text-indigo-700 font-semibold border border-indigo-700"
+                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-300"
               }`}
               onClick={() => setActiveTab("notes")}
             >
