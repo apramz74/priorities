@@ -263,7 +263,7 @@ export async function updateTodoDuration(id, duration) {
 }
 
 // Fetches todos for today
-export async function fetchTodosForToday() {
+export async function fetchAllTodosWithPriorities() {
   const today = getTodayDate();
   const todayStart = `${today}T00:00:00`;
   const todayEnd = `${today}T23:59:59`;
@@ -272,15 +272,14 @@ export async function fetchTodosForToday() {
     .from("todos")
     .select("*, priority:priorities(id, name, order)")
     .or(
-      `completed.eq.false,and(completed.eq.true,completed_at.gte.${todayStart},completed_at.lt.${todayEnd}),selected_for_today.eq.true`
+      `completed.eq.false,and(completed.eq.true,completed_at.gte.${todayStart},completed_at.lt.${todayEnd})`
     )
     .eq("deleted", false)
-    .or(`due_date.lte.${today},due_date.gt.${today},selected_for_today.eq.true`)
     .order("priority(order)", { ascending: true })
     .order("due_date", { ascending: true });
 
   if (error) {
-    console.error("Error fetching todos for daily selection:", error);
+    console.error("Error fetching all todos with priorities:", error);
     return [];
   }
   return data;

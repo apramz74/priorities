@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { fetchTodosForToday, calculateTodoCounts } from "../utils/api";
+import { fetchAllTodosWithPriorities, calculateTodoCounts } from "../utils/api";
 import ItemComponent from "./ItemComponent";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 
@@ -10,7 +10,7 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
   const [expandedPriorities, setExpandedPriorities] = useState({});
 
   const handleTodoUpdate = useCallback(async () => {
-    const fetchedTodos = await fetchTodosForToday();
+    const fetchedTodos = await fetchAllTodosWithPriorities();
 
     setTodos(fetchedTodos);
 
@@ -63,7 +63,9 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
 
     return (
       <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-4">{title}</h2>
+        <h2 className="text-xl font-semibold mb-1">{title}</h2>
+        <hr className="border-md border-indigo-deep mb-4" />{" "}
+        {/* Added horizontal line */}
         {sortedPriorityGroups.map(({ priority, todos }) => (
           <div key={priority.id} className="mb-4">
             <div
@@ -108,29 +110,25 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-black mb-2">Today</h1>
+        <h1 className="text-3xl font-black mb-2">Daily Plan</h1>
         <h2 className="text-lg mt-6">
           <span className="text-indigo-deep text-xl font-bold">
             {totalDueToday}
           </span>{" "}
           todos still due today and{" "}
-          <span className="text-red-900 text-xl font-bold">{totalOverdue}</span>{" "}
+          <span className="text-red-600 text-xl font-bold">{totalOverdue}</span>{" "}
           overdue
         </h2>
       </div>
 
       {renderTodoGroup(
-        "Overdue 🚩",
+        "Overdue",
         todos,
         (todo) => new Date(todo.due_date) < new Date(today)
       )}
+      {renderTodoGroup("Due today", todos, (todo) => todo.due_date === today)}
       {renderTodoGroup(
-        "Due today ⏰",
-        todos,
-        (todo) => todo.due_date === today
-      )}
-      {renderTodoGroup(
-        "Future 😎",
+        "Future",
         todos,
         (todo) => new Date(todo.due_date) > new Date(today)
       )}
