@@ -1,125 +1,139 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  fetchTodosForToday,
-  assignStartTimesAndDurations,
-  calculateTodoCounts,
-} from "../utils/api";
-import DailyCalendar from "./DailyCalendar";
-import TodoSelectionModal from "./TodoSelectionModal";
+import { fetchTodosForToday, calculateTodoCounts } from "../utils/api";
+import ItemComponent from "./ItemComponent";
+import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 
 const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
-  const [timeLeft, setTimeLeft] = useState("");
-  const [progressPercentage, setProgressPercentage] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTodos, setSelectedTodos] = useState([]);
+  const [todos, setTodos] = useState([]);
   const [totalDueToday, setTotalDueToday] = useState(0);
   const [totalOverdue, setTotalOverdue] = useState(0);
-  const [allTodos, setAllTodos] = useState([]);
-
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
+  const [expandedPriorities, setExpandedPriorities] = useState({});
 
   const handleTodoUpdate = useCallback(async () => {
-    const todos = await fetchTodosForToday();
-    setAllTodos(todos);
+    const fetchedTodos = await fetchTodosForToday();
 
-    const selectedTodosWithStartTimes = await assignStartTimesAndDurations(
-      todos.filter((todo) => todo.selected_for_today)
-    );
-    setSelectedTodos(selectedTodosWithStartTimes);
+    setTodos(fetchedTodos);
 
     const { dueToday, overdue } = await calculateTodoCounts();
+
     setTotalDueToday(dueToday);
     setTotalOverdue(overdue);
   }, []);
 
   useEffect(() => {
     handleTodoUpdate();
-
-    const updateTime = () => {
-      const now = new Date();
-      const startTime = new Date(now).setHours(9, 0, 0, 0);
-      const endTime = new Date(now).setHours(17, 0, 0, 0);
-
-      if (now < startTime) {
-        setTimeLeft("Workday hasn't started yet");
-        setProgressPercentage(0);
-      } else if (now > endTime) {
-        setTimeLeft("Workday is over");
-        setProgressPercentage(100);
-      } else {
-        const totalMinutes = (endTime - startTime) / 60000;
-        const elapsedMinutes = (now - startTime) / 60000;
-        const remainingMinutes = totalMinutes - elapsedMinutes;
-
-        const hours = Math.floor(remainingMinutes / 60);
-        const minutes = Math.floor(remainingMinutes % 60);
-
-        setTimeLeft(`${hours}h ${minutes}m  left in the workday`);
-        setProgressPercentage((elapsedMinutes / totalMinutes) * 100);
-      }
-    };
-
-    updateTime();
-    const timer = setInterval(updateTime, 60000); // Update every minute
-
-    return () => clearInterval(timer);
   }, [handleTodoUpdate]);
+
+  const togglePriorityExpansion = (groupId, priorityId) => {
+    setExpandedPriorities((prev) => ({
+      ...prev,
+      [groupId]: {
+        ...prev[groupId],
+        [priorityId]: !prev[groupId]?.[priorityId],
+      },
+    }));
+  };
+
+  const renderTodoGroup = (title, todos, priorityFilter) => {
+    const filteredTodos = todos.filter(priorityFilter);
+
+    if (filteredTodos.length === 0) {
+      return null;
+    }
+
+    // Group todos by priority
+    const priorityGroups = filteredTodos.reduce((groups, todo) => {
+      const priority = todo.priority;
+      if (!groups[priority.id]) {
+        groups[priority.id] = {
+          priority: priority,
+          todos: [],
+        };
+      }
+      groups[priority.id].todos.push(todo);
+      return groups;
+    }, {});
+
+    // Sort priorityGroups based on the order in the priorities prop
+    const sortedPriorityGroups = priorities
+      .filter((priority) => priorityGroups[priority.id])
+      .map((priority) => priorityGroups[priority.id]);
+
+    const groupId = title.toLowerCase().replace(/\s+/g, "-");
+
+    return (
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-4">{title}</h2>
+        {sortedPriorityGroups.map(({ priority, todos }) => (
+          <div key={priority.id} className="mb-4">
+            <div
+              className="flex items-center cursor-pointer"
+              onClick={() => togglePriorityExpansion(groupId, priority.id)}
+            >
+              {expandedPriorities[groupId]?.[priority.id] ? (
+                <ChevronDownIcon className="w-5 h-5 mr-2" />
+              ) : (
+                <ChevronRightIcon className="w-5 h-5 mr-2" />
+              )}
+              <h3 className="text-md ">{priority.name}</h3>
+            </div>
+            {expandedPriorities[groupId]?.[priority.id] && (
+              <div className="ml-7 mt-2 space-y-2">
+                {todos.map((todo) => (
+                  <ItemComponent
+                    key={todo.id}
+                    item={todo}
+                    onToggleComplete={() => {
+                      // Implement toggle complete functionality
+                    }}
+                    onUpdate={() => {
+                      // Implement update functionality
+                    }}
+                    onDelete={() => {
+                      // Implement delete functionality
+                    }}
+                    borderColor="border-indigo-600"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const today = new Date().toISOString().split("T")[0];
 
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-black mb-8">Daily Plan</h1>
-        <h2 className="text-xl font-medium mb-2">
-          {timeLeft.includes("left in the workday") ? (
-            <>
-              <span className="text-indigo-deep font-bold">
-                {timeLeft.split(" ")[0]} {timeLeft.split(" ")[1]}
-              </span>
-              <span className="text-base">
-                {timeLeft.split(" ").slice(2).join(" ")}
-              </span>
-            </>
-          ) : (
-            <span className="text-black font-bold">{timeLeft}</span>
-          )}
+        <h1 className="text-3xl font-black mb-2">Today</h1>
+        <h2 className="text-lg mt-6">
+          <span className="text-indigo-deep text-xl font-bold">
+            {totalDueToday}
+          </span>{" "}
+          todos still due today and{" "}
+          <span className="text-red-900 text-xl font-bold">{totalOverdue}</span>{" "}
+          overdue
         </h2>
-        <div className="w-full bg-white border-2 border-indigo-deep rounded-lg h-10 mb-2 overflow-hidden">
-          <div
-            className="bg-indigo-600 h-10 rounded-l-md flex items-center justify-center"
-            style={{ width: `${progressPercentage}%`, opacity: 0.8 }}
-          >
-            <span className="text-white text-xs font-medium">
-              {Math.round(progressPercentage)}% complete
-            </span>
-          </div>
-        </div>
       </div>
 
-      <div className="">
-        <DailyCalendar
-          onTodoUpdate={handleTodoUpdate}
-          selectedTodos={selectedTodos}
-          totalDueToday={totalDueToday}
-          totalOverdue={totalOverdue}
-          handleOpenModal={handleOpenModal}
-        />
-      </div>
-
-      <TodoSelectionModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        selectedTodos={selectedTodos}
-        setSelectedTodos={setSelectedTodos}
-        priorities={priorities}
-        allTodos={allTodos}
-        onTodoUpdate={handleTodoUpdate}
-      />
+      {renderTodoGroup(
+        "Overdue 🚩",
+        todos,
+        (todo) => new Date(todo.due_date) < new Date(today)
+      )}
+      {renderTodoGroup(
+        "Due today ⏰",
+        todos,
+        (todo) => todo.due_date === today
+      )}
+      {renderTodoGroup(
+        "Future 😎",
+        todos,
+        (todo) => new Date(todo.due_date) > new Date(today)
+      )}
     </div>
   );
 };
