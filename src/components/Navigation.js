@@ -97,8 +97,8 @@ const Navigation = ({
   ];
 
   return (
-    <nav className="w-72 bg-white border-r border-gray-200 h-screen p-6 flex flex-col">
-      <div className="mb-8">
+    <nav className="w-72 bg-white border-r border-gray-200 h-flex p-6 flex flex-col">
+      <div className="flex-shrink-0 mb-8">
         <button
           onClick={() => onSelectView({ type: "dailyPlan" })}
           className="text-[#0000D1] font-extrabold text-xl flex items-center"
@@ -108,7 +108,7 @@ const Navigation = ({
         </button>
       </div>
 
-      <div className="h-[calc(100vh-200px)] overflow-y-auto">
+      <div className="flex-grow overflow-y-auto">
         <h3 className="text-md font-semibold text-gray-600 mb-2">Planning</h3>
         <button
           onClick={() => onSelectView({ type: "dailyPlan" })}
