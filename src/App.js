@@ -127,7 +127,7 @@ const PriorityManagementTool = () => {
         addPriority={addPriority}
         updatePriorities={updatePriorities}
       />
-      <div className="flex-grow overflow-auto">
+      <div className="flex-grow overflow-y-auto">
         <div className="max-w-6xl min-w-[1000px] mx-auto p-4">
           {renderView()}
         </div>
