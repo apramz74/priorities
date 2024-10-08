@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { fetchNotes, addNote, updateNote, deleteNote } from "../utils/api";
 import NotesModal from "./NotesModal";
 
@@ -7,19 +7,21 @@ const NotesView = ({ priorityId }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
 
-  useEffect(() => {
-    loadNotes();
-  });
-
-  const loadNotes = async () => {
+  const loadNotes = useCallback(async () => {
     const fetchedNotes = await fetchNotes(priorityId);
     setNotes(fetchedNotes);
-  };
+  }, [priorityId]);
+
+  useEffect(() => {
+    loadNotes();
+  }, [loadNotes]);
 
   const handleAddNote = async (content) => {
     try {
       const newNote = await addNote(priorityId, content);
       if (newNote) {
+        // Instead of updating the state directly, reload all notes
+
         setNotes((prevNotes) => [...prevNotes, newNote]);
       }
     } catch (error) {
