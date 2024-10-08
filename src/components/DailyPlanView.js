@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { fetchAllTodosWithPriorities, calculateTodoCounts } from "../utils/api";
+import {
+  fetchAllTodosWithPriorities,
+  calculateTodoCounts,
+  toggleComplete,
+} from "../utils/api";
 import ItemComponent from "./ItemComponent";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 
@@ -19,6 +23,13 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
     setTotalDueToday(dueToday);
     setTotalOverdue(overdue);
   }, []);
+
+  const handleToggleComplete = async (todo) => {
+    const success = await toggleComplete("todos", todo.id, !todo.completed);
+    if (success) {
+      await handleTodoUpdate();
+    }
+  };
 
   useEffect(() => {
     handleTodoUpdate();
@@ -85,9 +96,7 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
                   <ItemComponent
                     key={todo.id}
                     item={todo}
-                    onToggleComplete={() => {
-                      // Implement toggle complete functionality
-                    }}
+                    onToggleComplete={() => handleToggleComplete(todo)}
                     onUpdate={() => {
                       // Implement update functionality
                     }}
