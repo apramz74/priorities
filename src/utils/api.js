@@ -195,7 +195,13 @@ export async function updateTodo(todo) {
 
 // Marks a todo as deleted
 export async function deleteTodo(id) {
-  return toggleDeleted("todos", id, true);
+  const { error } = await supabase.from("todos").delete().eq("id", id);
+
+  if (error) {
+    console.error("Error deleting todo:", error);
+    return false;
+  }
+  return true;
 }
 
 // Fetches todos for the miscellaneous priority

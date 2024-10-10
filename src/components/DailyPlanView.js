@@ -3,6 +3,8 @@ import {
   fetchAllTodosWithPriorities,
   calculateTodoCounts,
   toggleComplete,
+  deleteTodo,
+  updateTodo, // Add this import
 } from "../utils/api";
 import ItemComponent from "./ItemComponent";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
@@ -28,6 +30,23 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
     const success = await toggleComplete("todos", todo.id, !todo.completed);
     if (success) {
       await handleTodoUpdate();
+    }
+  };
+
+  // Add this new function to handle todo deletion
+  const handleDeleteTodo = async (todo) => {
+    const success = await deleteTodo(todo.id);
+    if (success) {
+      await handleTodoUpdate();
+    }
+  };
+
+  // Update this function to match the implementation from TodoSection.js
+  const handleUpdateTodo = async (id, field, value) => {
+    const updatedTodo = { ...todos.find((t) => t.id === id), [field]: value };
+    const result = await updateTodo(updatedTodo);
+    if (result) {
+      setTodos(todos.map((t) => (t.id === result.id ? result : t)));
     }
   };
 
@@ -97,12 +116,8 @@ const DailyPlanView = ({ priorities, setSelectedPriority, setView }) => {
                     key={todo.id}
                     item={todo}
                     onToggleComplete={() => handleToggleComplete(todo)}
-                    onUpdate={() => {
-                      // Implement update functionality
-                    }}
-                    onDelete={() => {
-                      // Implement delete functionality
-                    }}
+                    onUpdate={handleUpdateTodo}
+                    onDelete={() => handleDeleteTodo(todo)}
                     borderColor="border-indigo-600"
                   />
                 ))}
