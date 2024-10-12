@@ -331,3 +331,112 @@
   background-color: #eef2ff;
   border-color: #818cf8;
 }
+
+/* Gantt Chart styles */
+.gantt-chart {
+  width: 100%;
+  overflow-x: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+}
+
+.gantt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.gantt-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.gantt-header select {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 14px;
+  color: #374151;
+}
+
+.gantt-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.gantt-time-scale {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 200px; /* Adjust based on your priority name width */
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.time-label {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.gantt-priorities {
+  display: flex;
+  flex-direction: column;
+}
+
+.gantt-priority-row {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.priority-name {
+  width: 200px; /* Adjust as needed */
+  padding-right: 10px;
+  text-align: right;
+  font-weight: 500;
+  color: #374151;
+}
+
+.priority-bar-container {
+  flex: 1;
+  position: relative;
+  height: 20px;
+}
+
+.priority-bar {
+  position: absolute;
+  height: 100%;
+  background-color: #818cf8;
+  border-radius: 4px;
+}
+
+.milestone-marker {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #4f46e5;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.milestone-marker:hover::after {
+  content: attr(title);
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #374151;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 10;
+}
