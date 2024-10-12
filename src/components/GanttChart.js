@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { fetchMilestones } from "../utils/api";
 
+// Helper function to get the week number
+const getWeekNumber = (date) => {
+  const d = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+};
+
 const GanttChart = ({ priorities }) => {
   const [milestones, setMilestones] = useState({});
   const [timeScale, setTimeScale] = useState("months");
@@ -56,6 +67,8 @@ const GanttChart = ({ priorities }) => {
           labels.push(new Date(current));
           current.setMonth(current.getMonth() + 3);
           break;
+        default:
+          break;
       }
     }
 
@@ -65,7 +78,7 @@ const GanttChart = ({ priorities }) => {
   const formatTimeLabel = (date) => {
     switch (timeScale) {
       case "weeks":
-        return `Week ${date.getWeek()}`;
+        return `Week ${getWeekNumber(date)}`;
       case "months":
         return date.toLocaleString("default", {
           month: "short",
@@ -73,6 +86,8 @@ const GanttChart = ({ priorities }) => {
         });
       case "quarters":
         return `Q${Math.floor(date.getMonth() / 3) + 1} ${date.getFullYear()}`;
+      default:
+        return "";
     }
   };
 
@@ -158,17 +173,6 @@ const GanttChart = ({ priorities }) => {
       </div>
     </div>
   );
-};
-
-// Helper function to get the week number
-Date.prototype.getWeek = function () {
-  var d = new Date(
-    Date.UTC(this.getFullYear(), this.getMonth(), this.getDate())
-  );
-  var dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
 };
 
 export default GanttChart;
