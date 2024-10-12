@@ -121,17 +121,6 @@ const Navigation = ({
           <DailyPlanIcon className="w-5 h-5 mr-7" />
           <span className="font-medium">Daily Plan</span>
         </button>
-        <button
-          onClick={() => onSelectView({ type: "weeklyReport" })}
-          className={`w-full text-left py-2 px-4 rounded flex items-center text-sm ${
-            activeView.type === "weeklyReport"
-              ? "bg-indigo-100 text-indigo-700"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-        >
-          <WeeklyReportIcon className="w-5 h-5 mr-7 fill-current" />
-          <span className="font-medium">Weekly Report</span>
-        </button>
 
         <h3 className="text-md font-semibold text-gray-600 mb-2 mt-6">
           Priorities
