@@ -5,7 +5,7 @@ import { ReactComponent as CompletedCheckmarkIcon } from "./completed_checkmark_
 import StandardModal from "./StandardModal";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { ReactComponent as DragHandleIcon } from "./drag_handle_icon.svg";
-import { ReactComponent as WeeklyReportIcon } from "./weekly_report_icon.svg";
+
 import { ReactComponent as DailyPlanIcon } from "./calendar_icon.svg";
 
 const StrictModeDroppable = ({ children, ...props }) => {
@@ -121,6 +121,19 @@ const Navigation = ({
           <DailyPlanIcon className="w-5 h-5 mr-7" />
           <span className="font-medium">Daily Plan</span>
         </button>
+
+        <button
+          onClick={() => onSelectView({ type: "ganttChart" })}
+          className={`w-full text-left py-2 px-4 rounded flex items-center text-sm mb-2 ${
+            activeView.type === "ganttChart"
+              ? "bg-indigo-100 text-indigo-700"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+        >
+          <span className="font-medium ml-12">Gantt Chart</span>
+        </button>
+
+
 
         <h3 className="text-md font-semibold text-gray-600 mb-2 mt-6">
           Priorities

@@ -397,8 +397,14 @@ export async function fetchMilestones(priorityId) {
     .from("milestones")
     .select("*")
     .eq("priority_id", priorityId)
-    .is("deleted", false);
-  if (error) console.log("Error fetching milestones:", error);
+    .is("deleted", false)
+    .order("date", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching milestones:", error);
+    return [];
+  }
+
   return data || [];
 }
 

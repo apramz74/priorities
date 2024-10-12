@@ -13,6 +13,7 @@ import {
 } from "./utils/api";
 import Navigation from "./components/Navigation";
 import DailyCalendar from "./components/DailyCalendar";
+import GanttChart from "./components/GanttChart";
 
 const PriorityManagementTool = () => {
   const [activeView, setActiveView] = useState({ type: "dailyPlan" });
@@ -113,6 +114,8 @@ const PriorityManagementTool = () => {
         return <WeeklyReportView priorities={priorities} />;
       case "dailyCalendar":
         return <DailyCalendar />;
+      case "ganttChart":
+        return <GanttChart priorities={priorities} />;
       default:
         return <DailyPlanView priorities={priorities} />;
     }
