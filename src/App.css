@@ -92,7 +92,7 @@
 
 [data-tooltip]:hover::after {
   content: attr(data-tooltip);
-  position: fixed;
+  position: absolute;
   background-color: rgba(0, 0, 0, 0.8);
   color: white;
   padding: 4px 8px;
@@ -101,6 +101,23 @@
   white-space: nowrap;
   z-index: 10;
   pointer-events: none;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 5px;
+}
+
+/* Add a small arrow to the tooltip */
+[data-tooltip]:hover::before {
+  content: "";
+  position: absolute;
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.8);
+  z-index: 10;
+  pointer-events: none;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .gradient-background {
@@ -339,28 +356,10 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
-}
-
-.gantt-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.gantt-header h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.gantt-header select {
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background-color: white;
-  font-size: 14px;
-  color: #374151;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .gantt-content {
@@ -368,19 +367,11 @@
   flex-direction: column;
 }
 
+/* You may want to adjust the padding-left of .gantt-time-scale 
+   since we no longer have the time labels */
 .gantt-time-scale {
-  display: flex;
-  justify-content: space-between;
-  padding-left: 200px; /* Adjust based on your priority name width */
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.time-label {
-  flex: 1;
-  text-align: center;
-  padding: 8px 0;
-  font-size: 12px;
-  color: #6b7280;
+  padding-left: 220px;
+  /* ... */
 }
 
 .gantt-priorities {
@@ -391,52 +382,62 @@
 .gantt-priority-row {
   display: flex;
   align-items: center;
-  height: 40px;
-  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 10px;
+  position: relative; /* Add this */
+}
+
+.gantt-priority-row::after {
+  content: "";
+  position: absolute;
+  bottom: -5px; /* Adjust this value to position the line */
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #e5e7eb; /* Light gray color for the line */
+}
+
+/* Remove the bottom border from the last priority row */
+.gantt-priority-row:last-child::after {
+  display: none;
 }
 
 .priority-name {
-  width: 200px; /* Adjust as needed */
+  width: 200px;
   padding-right: 10px;
   text-align: right;
-  font-weight: 500;
+  font-weight: 600;
   color: #374151;
+  font-size: 14px;
 }
 
 .priority-bar-container {
   flex: 1;
   position: relative;
-  height: 20px;
+  height: 30px;
+  background-color: #ffffff; /* Changed to white background */
 }
 
 .priority-bar {
   position: absolute;
   height: 100%;
-  background-color: #818cf8;
-  border-radius: 4px;
+  background-color: #e5e5ff;
+  top: 0;
+  border-radius: 7px; /* Rounded corners for the colored bar */
 }
 
 .milestone-marker {
   position: absolute;
-  width: 10px;
-  height: 10px;
-  background-color: #4f46e5;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
+  background-color: #4338ca;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  cursor: pointer;
+  transition: transform 0.05s ease-in-out;
 }
 
-.milestone-marker:hover::after {
-  content: attr(title);
-  position: absolute;
-  top: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #374151;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  z-index: 10;
+.milestone-marker:hover {
+  transform: translate(-50%, -50%) scale(1.1);
 }
