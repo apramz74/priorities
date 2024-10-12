@@ -133,6 +133,8 @@ const Navigation = ({
           <span className="font-medium ml-12">Gantt Chart</span>
         </button>
 
+
+
         <h3 className="text-md font-semibold text-gray-600 mb-2 mt-6">
           Priorities
         </h3>
