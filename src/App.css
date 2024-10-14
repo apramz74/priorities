@@ -349,14 +349,14 @@
   border-color: #818cf8;
 }
 
-/* Gantt Chart styles */
+/* Updated Gantt Chart styles */
 .gantt-chart {
   width: 100%;
   overflow-x: auto;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
-  padding: 20px;
+  padding: 10px;
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
@@ -367,11 +367,21 @@
   flex-direction: column;
 }
 
-/* You may want to adjust the padding-left of .gantt-time-scale 
-   since we no longer have the time labels */
 .gantt-time-scale {
-  padding-left: 220px;
-  /* ... */
+  position: relative;
+  height: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 5px;
+}
+
+.month-label {
+  position: absolute;
+  text-align: center;
+  font-weight: 600;
+  color: #4b5563;
+  font-size: 10px;
+  padding: 2px 0;
+  border-left: 1px solid #e5e7eb;
 }
 
 .gantt-priorities {
@@ -382,39 +392,35 @@
 .gantt-priority-row {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
-  position: relative; /* Add this */
+  margin-bottom: 10px; /* Increased from 5px */
+  position: relative;
+  padding: 5px 0; /* Added padding top and bottom */
 }
 
 .gantt-priority-row::after {
   content: "";
   position: absolute;
-  bottom: -5px; /* Adjust this value to position the line */
+  bottom: -5px; /* Adjusted to account for new padding */
   left: 0;
   right: 0;
   height: 1px;
-  background-color: #e5e7eb; /* Light gray color for the line */
-}
-
-/* Remove the bottom border from the last priority row */
-.gantt-priority-row:last-child::after {
-  display: none;
+  background-color: #e5e7eb;
 }
 
 .priority-name {
-  width: 200px;
-  padding-right: 10px;
+  width: 150px;
+  padding-right: 10px; /* Increased from 5px */
   text-align: right;
   font-weight: 600;
   color: #374151;
-  font-size: 14px;
+  font-size: 14px; /* Increased from 12px */
+  flex-shrink: 0;
 }
 
 .priority-bar-container {
-  flex: 1;
   position: relative;
-  height: 30px;
-  background-color: #ffffff; /* Changed to white background */
+  height: 24px; /* Increased from 20px */
+  flex-grow: 1;
 }
 
 .priority-bar {
@@ -422,13 +428,13 @@
   height: 100%;
   background-color: #e5e5ff;
   top: 0;
-  border-radius: 7px; /* Rounded corners for the colored bar */
+  border-radius: 6px; /* Increased from 4px to match new height */
 }
 
 .milestone-marker {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 10px; /* Increased from 8px */
+  height: 10px; /* Increased from 8px */
   border-radius: 50%;
   background-color: #4338ca;
   top: 50%;
@@ -439,5 +445,20 @@
 }
 
 .milestone-marker:hover {
-  transform: translate(-50%, -50%) scale(1.1);
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+/* Add styles for the zoom buttons */
+.zoom-controls button {
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.zoom-controls button:hover {
+  background-color: #e5e7eb;
 }
