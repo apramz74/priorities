@@ -1,10 +1,68 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { fetchMilestones, fetchPriorities } from "../utils/api";
 
+const DAY_WIDTH = 3; // Pixels per day
+const PRIORITY_NAME_WIDTH = 150; // Width of the priority name column
+
+const TimeScale = ({ startDate, endDate, zoomFactor }) => {
+  const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+  const months = [];
+  let currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    months.push(new Date(currentDate));
+    currentDate.setMonth(currentDate.getMonth() + 1);
+  }
+
+  return (
+    <div
+      className="gantt-time-scale"
+      style={{
+        width: `${days * DAY_WIDTH * zoomFactor}px`,
+        marginLeft: `${PRIORITY_NAME_WIDTH}px`, // Add left margin
+      }}
+    >
+      {months.map((month, index) => {
+        const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
+        const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+        const monthWidth = Math.min(
+          ((monthEnd - monthStart) / (1000 * 60 * 60 * 24)) *
+            DAY_WIDTH *
+            zoomFactor,
+          ((endDate - monthStart) / (1000 * 60 * 60 * 24)) *
+            DAY_WIDTH *
+            zoomFactor
+        );
+        const monthLeft =
+          ((monthStart - startDate) / (1000 * 60 * 60 * 24)) *
+          DAY_WIDTH *
+          zoomFactor;
+
+        return (
+          <div
+            key={index}
+            className="month-label"
+            style={{
+              left: `${monthLeft}px`,
+              width: `${monthWidth}px`,
+            }}
+          >
+            {month.toLocaleString("default", {
+              month: "short",
+              year: "numeric",
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const GanttChart = () => {
   const [priorities, setPriorities] = useState([]);
   const [milestones, setMilestones] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [zoomFactor, setZoomFactor] = useState(2);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,7 +83,7 @@ const GanttChart = () => {
     fetchData();
   }, []);
 
-  const { startDate, endDate, months } = useMemo(() => {
+  const { startDate, endDate, days } = useMemo(() => {
     let start = new Date();
     let end = new Date();
     const allMilestones = Object.values(milestones).flat();
@@ -39,31 +97,16 @@ const GanttChart = () => {
     start = new Date(start.getFullYear(), start.getMonth(), 1);
     end = new Date(end.getFullYear(), end.getMonth() + 1, 0);
 
-    const monthsArray = [];
-    let current = new Date(start);
-    while (current <= end) {
-      monthsArray.push(new Date(current));
-      current.setMonth(current.getMonth() + 1);
-    }
+    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
 
-    return { startDate: start, endDate: end, months: monthsArray };
+    return { startDate: start, endDate: end, days: totalDays };
   }, [milestones]);
 
-  const calculateMilestonePosition = (milestoneDate) => {
-    const date = new Date(milestoneDate);
-    const monthIndex = months.findIndex(
-      (m) =>
-        m.getMonth() === date.getMonth() &&
-        m.getFullYear() === date.getFullYear()
+  const calculatePosition = (date) => {
+    const days = Math.floor(
+      (new Date(date) - startDate) / (1000 * 60 * 60 * 24)
     );
-    const daysInMonth = new Date(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      0
-    ).getDate();
-    const dayOfMonth = date.getDate();
-
-    return ((monthIndex + dayOfMonth / daysInMonth) / months.length) * 100;
+    return days * DAY_WIDTH * zoomFactor;
   };
 
   const calculateBarPosition = (priorityMilestones) => {
@@ -73,18 +116,16 @@ const GanttChart = () => {
     const firstMilestone = new Date(Math.min(...milestoneDates));
     const lastMilestone = new Date(Math.max(...milestoneDates));
 
-    // Add a small buffer before the first milestone and after the last milestone
-    const bufferDays = 5; // Adjust this value as needed
+    const bufferDays = 5;
     const barStartDate = new Date(firstMilestone);
     barStartDate.setDate(barStartDate.getDate() - bufferDays);
     const barEndDate = new Date(lastMilestone);
     barEndDate.setDate(barEndDate.getDate() + bufferDays);
 
-    const totalDuration = endDate - startDate;
-    const left = ((barStartDate - startDate) / totalDuration) * 100;
-    const width = ((barEndDate - barStartDate) / totalDuration) * 100;
+    const left = calculatePosition(barStartDate);
+    const width = calculatePosition(barEndDate) - left;
 
-    return { left: `${left}%`, width: `${width}%` };
+    return { left: `${left}px`, width: `${width}px` };
   };
 
   const formatMilestoneDate = (date) => {
@@ -95,17 +136,41 @@ const GanttChart = () => {
     });
   };
 
+  const zoomIn = () => setZoomFactor((prev) => Math.min(prev * 1.2, 3));
+  const zoomOut = () => setZoomFactor((prev) => Math.max(prev / 1.2, 0.5));
+
   if (isLoading) {
     return <div>Loading Gantt Chart...</div>;
   }
 
   return (
     <div className="p-6">
-      <div className="mb-3">
-        <h1 className="text-3xl font-black mb-2">Gantt</h1>
+      <div className="mb-3 flex justify-between items-center">
+        <h1 className="text-3xl font-black">Gantt</h1>
+        <div className="zoom-controls">
+          <button
+            onClick={zoomOut}
+            className="mr-2 px-2 py-1 bg-gray-200 rounded"
+          >
+            -
+          </button>
+          <button onClick={zoomIn} className="px-2 py-1 bg-gray-200 rounded">
+            +
+          </button>
+        </div>
       </div>
       <div className="gantt-chart">
-        <div className="gantt-content">
+        <TimeScale
+          startDate={startDate}
+          endDate={endDate}
+          zoomFactor={zoomFactor}
+        />
+        <div
+          className="gantt-content"
+          style={{
+            width: `${days * DAY_WIDTH * zoomFactor + PRIORITY_NAME_WIDTH}px`,
+          }}
+        >
           <div className="gantt-priorities">
             {priorities.map((priority) => {
               const barPosition = calculateBarPosition(milestones[priority.id]);
@@ -127,9 +192,7 @@ const GanttChart = () => {
                         key={milestone.id}
                         className="milestone-marker"
                         style={{
-                          left: `${calculateMilestonePosition(
-                            milestone.date
-                          )}%`,
+                          left: `${calculatePosition(milestone.date)}px`,
                         }}
                         data-tooltip={`${
                           milestone.title
