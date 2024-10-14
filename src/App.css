@@ -369,18 +369,18 @@
 
 .gantt-time-scale {
   position: relative;
-  height: 20px;
+  height: 25px; /* Increased from 20px to accommodate larger labels */
   border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 5px;
+  margin-bottom: 10px; /* Increased from 5px */
 }
 
 .month-label {
   position: absolute;
   text-align: center;
-  font-weight: 600;
+  font-weight: normal; /* Changed from 600 to normal */
   color: #4b5563;
-  font-size: 10px;
-  padding: 2px 0;
+  font-size: 12px;
+  padding: 4px 0;
   border-left: 1px solid #e5e7eb;
 }
 
@@ -392,15 +392,16 @@
 .gantt-priority-row {
   display: flex;
   align-items: center;
-  margin-bottom: 10px; /* Increased from 5px */
+  margin-bottom: 15px; /* Increased from 10px to add more space between rows */
   position: relative;
-  padding: 5px 0; /* Added padding top and bottom */
+  padding: 10px 0; /* Increased from 5px to allow for taller bars */
+  height: 40px; /* Added to explicitly set the row height */
 }
 
 .gantt-priority-row::after {
   content: "";
   position: absolute;
-  bottom: -5px; /* Adjusted to account for new padding */
+  bottom: -7px; /* Adjusted to account for new padding */
   left: 0;
   right: 0;
   height: 1px;
@@ -409,17 +410,17 @@
 
 .priority-name {
   width: 150px;
-  padding-right: 10px; /* Increased from 5px */
+  padding-right: 10px;
   text-align: right;
-  font-weight: 600;
+  font-weight: normal; /* Changed from 600 to normal */
   color: #374151;
-  font-size: 14px; /* Increased from 12px */
+  font-size: 14px;
   flex-shrink: 0;
 }
 
 .priority-bar-container {
   position: relative;
-  height: 24px; /* Increased from 20px */
+  height: 30px; /* Increased from 24px */
   flex-grow: 1;
 }
 
@@ -428,13 +429,13 @@
   height: 100%;
   background-color: #e5e5ff;
   top: 0;
-  border-radius: 6px; /* Increased from 4px to match new height */
+  border-radius: 8px; /* Increased from 6px to match new height */
 }
 
 .milestone-marker {
   position: absolute;
-  width: 10px; /* Increased from 8px */
-  height: 10px; /* Increased from 8px */
+  width: 12px; /* Slightly increased from 10px */
+  height: 12px; /* Slightly increased from 10px */
   border-radius: 50%;
   background-color: #4338ca;
   top: 50%;
