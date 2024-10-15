@@ -405,7 +405,15 @@ export async function fetchMilestones(priorityId) {
     return [];
   }
 
-  return data || [];
+  // Add a completed status to each milestone
+  // For this example, we'll consider a milestone completed if its date is in the past
+  const now = new Date();
+  const milestonesWithStatus = data.map((milestone) => ({
+    ...milestone,
+    completed: new Date(milestone.date) < now,
+  }));
+
+  return milestonesWithStatus || [];
 }
 
 // Adds a new milestone
