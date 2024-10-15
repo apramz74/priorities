@@ -58,6 +58,28 @@ const TimeScale = ({ startDate, endDate, zoomFactor }) => {
   );
 };
 
+// Add this new component
+const TodayIndicator = ({ startDate, zoomFactor }) => {
+  const today = new Date();
+  const left =
+    ((today - startDate) / (1000 * 60 * 60 * 24)) * DAY_WIDTH * zoomFactor;
+
+  return (
+    <div
+      className="today-indicator"
+      style={{
+        position: "absolute",
+        left: `${left + PRIORITY_NAME_WIDTH}px`,
+        top: "0px", // Adjust this value to match the height of your time scale
+        bottom: 0,
+        width: "2px",
+        backgroundColor: "red",
+        zIndex: 10,
+      }}
+    />
+  );
+};
+
 const GanttChart = () => {
   const [priorities, setPriorities] = useState([]);
   const [milestones, setMilestones] = useState({});
@@ -159,50 +181,55 @@ const GanttChart = () => {
           </button>
         </div>
       </div>
-      <div className="gantt-chart">
+      <div className="gantt-chart" style={{ position: "relative" }}>
         <TimeScale
           startDate={startDate}
           endDate={endDate}
           zoomFactor={zoomFactor}
         />
-        <div
-          className="gantt-content"
-          style={{
-            width: `${days * DAY_WIDTH * zoomFactor + PRIORITY_NAME_WIDTH}px`,
-          }}
-        >
-          <div className="gantt-priorities">
-            {priorities.map((priority) => {
-              const barPosition = calculateBarPosition(milestones[priority.id]);
-              return (
-                <div key={priority.id} className="gantt-priority-row">
-                  <div className="priority-name">{priority.name}</div>
-                  <div className="priority-bar-container">
-                    {barPosition && (
-                      <div
-                        className="priority-bar"
-                        style={{
-                          left: barPosition.left,
-                          width: barPosition.width,
-                        }}
-                      />
-                    )}
-                    {milestones[priority.id]?.map((milestone) => (
-                      <div
-                        key={milestone.id}
-                        className="milestone-marker"
-                        style={{
-                          left: `${calculatePosition(milestone.date)}px`,
-                        }}
-                        data-tooltip={`${
-                          milestone.title
-                        }: ${formatMilestoneDate(milestone.date)}`}
-                      />
-                    ))}
+        <div className="gantt-content-wrapper" style={{ position: "relative" }}>
+          <TodayIndicator startDate={startDate} zoomFactor={zoomFactor} />
+          <div
+            className="gantt-content"
+            style={{
+              width: `${days * DAY_WIDTH * zoomFactor + PRIORITY_NAME_WIDTH}px`,
+            }}
+          >
+            <div className="gantt-priorities">
+              {priorities.map((priority) => {
+                const barPosition = calculateBarPosition(
+                  milestones[priority.id]
+                );
+                return (
+                  <div key={priority.id} className="gantt-priority-row">
+                    <div className="priority-name">{priority.name}</div>
+                    <div className="priority-bar-container">
+                      {barPosition && (
+                        <div
+                          className="priority-bar"
+                          style={{
+                            left: barPosition.left,
+                            width: barPosition.width,
+                          }}
+                        />
+                      )}
+                      {milestones[priority.id]?.map((milestone) => (
+                        <div
+                          key={milestone.id}
+                          className="milestone-marker"
+                          style={{
+                            left: `${calculatePosition(milestone.date)}px`,
+                          }}
+                          data-tooltip={`${
+                            milestone.title
+                          }: ${formatMilestoneDate(milestone.date)}`}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
