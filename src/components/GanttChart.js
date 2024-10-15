@@ -216,13 +216,17 @@ const GanttChart = () => {
                       {milestones[priority.id]?.map((milestone) => (
                         <div
                           key={milestone.id}
-                          className="milestone-marker"
+                          className={`milestone-marker ${
+                            milestone.completed ? "milestone-completed" : ""
+                          }`}
                           style={{
                             left: `${calculatePosition(milestone.date)}px`,
                           }}
                           data-tooltip={`${
                             milestone.title
-                          }: ${formatMilestoneDate(milestone.date)}`}
+                          }: ${formatMilestoneDate(milestone.date)}${
+                            milestone.completed ? " (Completed)" : ""
+                          }`}
                         />
                       ))}
                     </div>

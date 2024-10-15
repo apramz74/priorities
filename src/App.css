@@ -434,10 +434,10 @@
 
 .milestone-marker {
   position: absolute;
-  width: 12px; /* Slightly increased from 10px */
-  height: 12px; /* Slightly increased from 10px */
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background-color: #4338ca;
+  background-color: #a78bfa; /* Lighter purple color for incomplete milestones */
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 1;
@@ -462,4 +462,8 @@
 
 .zoom-controls button:hover {
   background-color: #e5e7eb;
+}
+
+.milestone-completed {
+  background-color: #4338ca; /* Deep purple color for completed milestones */
 }
